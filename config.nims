@@ -1,5 +1,2 @@
 switch("define", "release")
 switch("opt", "size")
-switch("passL", "-static")
-switch("gcc.exe", "musl-gcc")
-switch("gcc.linkerexe", "musl-gcc")

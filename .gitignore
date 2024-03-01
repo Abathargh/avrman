@@ -1,2 +1,9 @@
+/nimclipboard
+/.nimcache
+/.vscode
+/.idea
+*.elf
+*.hex
+*.bin
 .idea
 avrman

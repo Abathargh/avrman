@@ -9,8 +9,8 @@ bin           = @["avrman"]
 
 # Dependencies
 
-requires "nim >= 1.6.14"
+requires "nim >= 2.0.0"
 
-after build:
-  exec("strip -s " & bin[0])
-  exec("upx --best " & bin[0])
+task clean, "deletes the previously built binary":
+  if fileExists bin[0]:
+    rmFile bin[0]
