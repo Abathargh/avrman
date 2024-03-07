@@ -66,5 +66,5 @@ generated.
 
 ## License
 
-This library is licensed under the 
+This application is licensed under the 
 [BSD 3-Clause "New" or "Revised" License](LICENSE).
