@@ -8,7 +8,7 @@ const
   cmake_tpl  = staticRead("./templates/c/cmake_tpl")
   cmakef_tpl = staticRead("./templates/c/cmake_flash_tpl")
   git_tpl    = staticRead("./templates/c/gitignore")
-  main_tpl   = staticRead("./templates/c/main.c")
+  main_tpl   = staticRead("./templates/c/main_tpl")
 
 
 proc generate_project*(mcu, fcpu, prog, proj: string, cmake: bool) =
