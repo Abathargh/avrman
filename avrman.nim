@@ -3,21 +3,12 @@ import std/strutils
 import std/tables
 import std/os
 
+import nimprj
+import cprj
+
 
 const
   version = "v0.1.0"
-
-  mcu_map = {
-    "atmega16u4": "USING_ATMEGA16U4",
-    "atmega32u4": "USING_ATMEGA32U4",
-    "atmega328p": "USING_ATMEGA328P",
-    "atmega640":  "USING_ATMEGA640",
-    "atmega644":  "USING_ATMEGA644",
-    "atmega1280": "USING_ATMEGA1280",
-    "atmega1281": "USING_ATMEGA1281",
-    "atmega2560": "USING_ATMEGA2560",
-    "atmega2561": "USING_ATMEGA2561",
-  }.toTable
 
   shortFlags = {'a', 'c', 'h', 'f', 'v'}
   longFlags  = @["all", "clean", "help", "flash", "verbose"]
@@ -45,60 +36,24 @@ Options:
   -p, --prog        the progstring to use in the flash targets
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
+  --cproject        initializes a C project instead of a nim one
+  --cmake           uses CMake instead of plain make; checked only if using 
+                    --cproject 
 """
-
-  config_tpl = staticRead("./templates/config.nims")
-  base_tpl = staticRead("./templates/base.nim")
-  panic_tpl = staticRead("./templates/panicoverride.nim")
-  nimble_tpl = staticRead("./templates/tpl.nimble")
-  flash_tpl = staticRead("./templates/tpl_flash.nimble")
-  git_tpl = staticRead("./templates/gitignore")
-
-
-proc supported() =
-  stdout.write "supported microcontrollers: "
-  for key in mcu_map.keys:
-    stdout.write("$# " % key)
-  stdout.writeLine("")
-
-
-proc generate_project(mcu, fcpu, prog, proj: string) =
-  if dirExists(proj):
-    stdout.writeLine "a directory with the current project name already exists"
-    quit(1)
-
-  if os.execShellCmd("nimble init $#" % proj) != 0:
-    stderr.writeLine "error during the project initialization"
-    quit(1)
-  
-  setCurrentDir(proj)
-    
-  let mcu_def = mcu_map[mcu]
-  writeFile("config.nims", config_tpl % @[mcu_def, mcu, fcpu, mcu, fcpu])
-  writeFile(".gitignore", git_tpl)
-
-  var f = open("$#.nimble" % proj, fmAppend)
-  defer:
-    f.close()
-  f.write(nimble_tpl)
-  if prog != "":
-    f.write(flash_tpl % @[prog, mcu, prog, mcu])
-  
-  setCurrentDir("./src")
-  writeFile("panicoverride.nim", panic_tpl)
-  writeFile("$#.nim" % proj, base_tpl)
 
 
 proc init(cmd_str: string) =
   var
-    mcu = ""
-    fcpu = ""
-    prog = ""
-    proj = ""
+    mcu   = ""
+    fcpu  = ""
+    prog  = ""
+    proj  = ""
+    cproj = false
+    cmake = false
     pi = initOptParser(
       cmd_str, 
       shortNoVal = {'s', 'h'}, 
-      longNoVal = @["supported", "help"]
+      longNoVal = @["supported", "help", "cproject", "cmake"]
     )
 
   for kind, opt, val in getopt(pi):
@@ -110,7 +65,9 @@ proc init(cmd_str: string) =
         of "mcu":  mcu  = val.toLower
         of "fcpu": fcpu = val
         of "prog": prog = val
-        of "supported": supported(); return
+        of "cproject":   cproj = true
+        of "cmake":      cmake = true
+        of "supported": nimprj.supported(); return
         of "help": echo init_usage; return
         else:
           echo "Unsupported long option $#" % opt
@@ -120,7 +77,7 @@ proc init(cmd_str: string) =
         of "m": mcu  = val.toLower
         of "f": fcpu = val
         of "p": prog = val
-        of "s": supported(); return
+        of "s": nimprj.supported(); return
         of "h": echo init_usage; return
         else:
           echo "Unsupported short option $#" % opt
@@ -134,7 +91,7 @@ proc init(cmd_str: string) =
     stderr.writeLine "you must specify an mcu"
     quit(1)
   
-  if mcu notin mcu_map:
+  if not nimprj.is_supported(mcu):
     stderr.writeLine "the passed mcu is not supported"
     quit(1)
 
@@ -157,8 +114,14 @@ proc init(cmd_str: string) =
     quit(1)
 
   try:
-    generate_project(mcu, fcpu, prog, proj)
-  except:
+    if cproj:
+      cprj.generate_project(mcu, fcpu, prog, proj, cmake)
+    else:
+      nimprj.generate_project(mcu, fcpu, prog, proj)
+  except CatchableError:
+    let err = getCurrentException()
+    let msg = getCurrentExceptionMsg()
+    stderr.writeLine("Error ($#): $#" % [err.repr, msg])
     os.removeDir(proj)
     quit(1)
 
