@@ -1,6 +1,6 @@
 # avrman
 
-Avrman is a tool for managing nim projects targetting AVR microcontrollers.
+avrman (*avr manager*) is a tool for managing nim projects targetting AVR microcontrollers.
 
 It is tightly coupled with the [avr_io](https://github.com/Abathargh/avr_io) 
 library, which is not a dependency, but it is used as the base dependency for 
@@ -49,7 +49,7 @@ help prompt.
 
 ### Init
 
-The init command can be used to initialize a new avr project. For example, the 
+For example, the 
 following command will initialize a project for an ATMega644 running at 8KHz, 
 using atmelice as its programmer:
 
