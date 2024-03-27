@@ -34,7 +34,27 @@ proc supported*() =
   stdout.writeLine("")
 
 
-proc generate_project*(mcu, fcpu, prog, proj: string) =
+proc delete_src_dir(filename: string) =
+  let data = readFile(filename)
+  var f = open(filename, FileMode.fmWrite)
+  defer: f.close()
+
+  for line in data.splitLines():
+    if "srcDir" in line:
+      continue
+    f.writeLine(line)
+  
+  for (kind, path) in walkDir("./src"):
+    case kind
+    of pcFile:
+      let new_path = path.split("/")[^1]
+      moveFile(path, new_path)
+    else: continue
+
+  removeDir("./src")
+
+
+proc generate_project*(mcu, fcpu, prog, proj: string, nosrc: bool) =
   if dirExists(proj):
     stdout.writeLine "a directory with the current project name already exists"
     quit(1)
@@ -49,7 +69,11 @@ proc generate_project*(mcu, fcpu, prog, proj: string) =
   writeFile("config.nims", config_tpl % [mcu_def, mcu, fcpu, mcu, fcpu])
   writeFile(".gitignore", git_tpl)
 
-  var f = open("$#.nimble" % proj, fmAppend)
+  let filename = "$#.nimble" % proj
+  if nosrc:
+    delete_src_dir(filename)
+
+  var f = open(filename, fmAppend)
   defer:
     f.close()
   f.write(nimble_tpl)

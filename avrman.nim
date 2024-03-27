@@ -13,7 +13,7 @@ const
   shortFlags = {'a', 'c', 'h', 'f', 'v'}
   longFlags  = @["all", "clean", "help", "flash", "verbose"]
   usage = """
-Avr manager for nim projects.
+avr manager for nim and c projects.
     
     avrman [options] command [command_options]
 
@@ -36,6 +36,7 @@ Options:
   -p, --prog        the progstring to use in the flash targets
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
+  --nosrc           specifies to nimble not to use the default `src` directory
   --cproject        initializes a C project instead of a nim one
   --cmake           uses CMake instead of plain make; checked only if using 
                     --cproject 
@@ -48,12 +49,13 @@ proc init(cmd_str: string) =
     fcpu  = ""
     prog  = ""
     proj  = ""
+    nosrc = false
     cproj = false
     cmake = false
     pi = initOptParser(
       cmd_str, 
       shortNoVal = {'s', 'h'}, 
-      longNoVal = @["supported", "help", "cproject", "cmake"]
+      longNoVal = @["supported", "help", "nosrc", "cproject", "cmake"]
     )
 
   for kind, opt, val in getopt(pi):
@@ -65,6 +67,7 @@ proc init(cmd_str: string) =
         of "mcu":  mcu  = val.toLower
         of "fcpu": fcpu = val
         of "prog": prog = val
+        of "nosrc":      nosrc = true
         of "cproject":   cproj = true
         of "cmake":      cmake = true
         of "supported": nimprj.supported(); return
@@ -117,7 +120,7 @@ proc init(cmd_str: string) =
     if cproj:
       cprj.generate_project(mcu, fcpu, prog, proj, cmake)
     else:
-      nimprj.generate_project(mcu, fcpu, prog, proj)
+      nimprj.generate_project(mcu, fcpu, prog, proj, nosrc)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
