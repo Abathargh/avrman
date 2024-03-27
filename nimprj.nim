@@ -1,3 +1,4 @@
+import std/strformat
 import std/strutils
 import std/tables
 import std/os
@@ -34,9 +35,9 @@ proc supported*() =
   stdout.writeLine("")
 
 
-proc delete_src_dir(filename: string) =
-  let data = readFile(filename)
-  var f = open(filename, FileMode.fmWrite)
+proc delete_src_dir(proj, nimble_file: string) =
+  let data = readFile(nimble_file)
+  var f = open(nimble_file, FileMode.fmWrite)
   defer: f.close()
 
   for line in data.splitLines():
@@ -44,11 +45,11 @@ proc delete_src_dir(filename: string) =
       continue
     f.writeLine(line)
   
-  for (kind, path) in walkDir("./src"):
+  for (kind, path) in walkDir(fmt"./{proj}/src"):
     case kind
     of pcFile:
       let new_path = path.split("/")[^1]
-      moveFile(path, new_path)
+      moveFile(path, fmt"./{proj}/{new_path}")
     else: continue
 
   removeDir("./src")
@@ -71,7 +72,7 @@ proc generate_project*(mcu, fcpu, prog, proj: string, nosrc: bool) =
 
   let filename = "$#.nimble" % proj
   if nosrc:
-    delete_src_dir(filename)
+    delete_src_dir(proj, filename)
 
   var f = open(filename, fmAppend)
   defer:
@@ -80,6 +81,7 @@ proc generate_project*(mcu, fcpu, prog, proj: string, nosrc: bool) =
   if prog != "":
     f.write(flash_tpl % [prog, mcu, prog, mcu])
   
-  setCurrentDir("./src")
+  if not nosrc:
+    setCurrentDir("./src")
   writeFile("panicoverride.nim", panic_tpl)
   writeFile("$#.nim" % proj, base_tpl)
