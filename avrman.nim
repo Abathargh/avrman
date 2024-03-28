@@ -10,8 +10,8 @@ import cprj
 const
   version = "v0.1.0"
 
-  shortFlags = {'a', 'c', 'h', 'f', 'v'}
-  longFlags  = @["all", "clean", "help", "flash", "verbose"]
+  shortFlags = {'h', 'v'}
+  longFlags  = @["help", "version"]
   usage = """
 avr manager for nim and c projects.
     
@@ -152,7 +152,8 @@ proc main() =
         quit(1)
     of cmdShortOption:
       case opt
-      of "h": echo usage; quit(0)
+      of "h": echo usage; return
+      of "v": echo version; return
       else:
         echo "Unsupported long option $#" % opt
         quit(1)
