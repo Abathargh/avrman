@@ -29,6 +29,12 @@ cd avrman
 nimble build
 ```
 
+Or simply install using:
+
+```bash
+nimble install avrman
+```
+
 ## Usage
 
 ```bash
