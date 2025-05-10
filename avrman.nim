@@ -43,7 +43,14 @@ Options:
 """
 
 
-proc init(cmd_str: string) =
+proc printError(msg: string) = 
+  try:
+    stderr.writeLine msg
+  except IOError:
+    discard
+
+
+proc init*(cmd_str: string): bool =
   var
     mcu   = ""
     fcpu  = ""
@@ -74,7 +81,7 @@ proc init(cmd_str: string) =
         of "help": echo init_usage; return
         else:
           echo "Unsupported long option $#" % opt
-          quit(1)
+          return false
       of cmdShortOption:
         case opt
         of "m": mcu  = val.toLower
@@ -84,19 +91,19 @@ proc init(cmd_str: string) =
         of "h": echo init_usage; return
         else:
           echo "Unsupported short option $#" % opt
-          quit(1)
+          return false
       of cmdArgument:
         proj = opt
         # assert only arg?
         break
 
   if mcu == "":
-    stderr.writeLine "you must specify an mcu"
-    quit(1)
+    printError "you must specify an mcu"
+    return false
   
   if not nimprj.is_supported(mcu):
-    stderr.writeLine "the passed mcu is not supported"
-    quit(1)
+    printError "the passed mcu is not supported"
+    return false
 
   if fcpu == "":
     stdout.writeLine "using default F_CPU=16000000"
@@ -106,15 +113,15 @@ proc init(cmd_str: string) =
     stdout.writeLine "skipping flash targets generation"
 
   if proj == "":
-    stderr.writeLine "you must specify a project name"
-    quit(1)
+    printError "you must specify a project name"
+    return false
   
   try:
     let f = fcpu.parseInt()
     if f <= 0: raise newException(ValueError, "")
   except ValueError:
-    stderr.writeLine "you must pass a valid fcpu (positive integer)"
-    quit(1)
+    printError "you must pass a valid fcpu (positive integer)"
+    return false
 
   try:
     if cproj:
@@ -124,9 +131,10 @@ proc init(cmd_str: string) =
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
-    stderr.writeLine("Error ($#): $#" % [err.repr, msg])
+    printError("Error ($#): $#" % [err.repr, msg])
     os.removeDir(proj)
-    quit(1)
+    return false
+  return true
 
 
 const
@@ -162,12 +170,12 @@ proc main() =
       break
 
   if cmd notin commands:
-    stderr.writeLine "the passed command ('$#') is not supported" % cmd
+    printError "the passed command ('$#') is not supported" % cmd
     quit(1)
-    
+  
   let cmdFunc = commands[cmd]
-  cmdFunc(p.cmdLineRest())
-
+  if not cmdFunc p.cmdLineRest():
+    quit(1)
 
 when isMainModule:
   main()
