@@ -1,11 +1,12 @@
 import std/strformat
 import std/strutils
 import std/tables
+import std/syncio
 import std/os
 
 
 const
-  mcu_map = {
+  mcu_map* = {
     "atmega16u4": "USING_ATMEGA16U4",
     "atmega32u4": "USING_ATMEGA32U4",
     "atmega328p": "USING_ATMEGA328P",
