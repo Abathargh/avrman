@@ -3,6 +3,7 @@ import std/strutils
 import std/tables
 import std/os
 
+import compiler
 import nimprj
 import cprj
 
@@ -23,6 +24,7 @@ Options:
 
 Commands:
   init              initializes an avr project
+  compile           compiles an avr file with the default avrman options
 """
 
   init_usage = """
@@ -40,6 +42,21 @@ Options:
   --cproject        initializes a C project instead of a nim one
   --cmake           uses CMake instead of plain make; checked only if using 
                     --cproject 
+"""
+
+  compile_usage = """
+Compiles an avr source file using the default avrman options. This means that
+the file will be compiled for the avr target in release mode, with no memory
+management strategy, for the standalone os.
+
+    avrman compile [options] FILE_NAME
+
+Options:
+  -o. --option      specifies an additional option to pass to the nim compiler
+  -m, --mcu         specifies the microcontroller part number
+  -s, --show        shows the elf/hex dump instead of just compiling
+  -x, --hex         compiles to hex instead of elf
+  -h, --help        shows this help message
 """
 
 
@@ -137,9 +154,70 @@ proc init*(cmd_str: string): bool =
   return true
 
 
+proc compile*(cmd_str: string): bool =
+  var
+    file = ""
+    mcu  = ""
+    show = false
+    hex  = false
+    options = newSeq[string]()
+    pi = initOptParser(
+      cmd_str,
+      shortNoVal = {'s', 'x', 'h'},
+      longNoVal = @["show", "hex", "help"]
+    )
+
+  for kind, opt, val in getopt(pi):
+    case pi.kind
+    of cmdEnd:
+      break
+    of cmdLongOption:
+      case opt
+      of "option": options.add(val)
+      of "mcu":    mcu  = val.toLower
+      of "show":   show = true
+      of "hex":    hex  = true
+      of "help":   echo compile_usage; return
+      else:
+        echo "Unsupported long option $#" % opt
+        return false
+    of cmdShortOption:
+      case opt
+      of "o": options.add(val)
+      of "m": mcu  = val.toLower
+      of "s": show = true
+      of "x": hex  = true
+      of "h": echo compile_usage; return
+      else:
+        echo "Unsupported short option $#" % opt
+        return false
+    of cmdArgument:
+      file = opt
+      # assert only arg?
+      break
+
+  if file == "":
+    printError "you must specify a file name"
+    return false
+
+  if mcu == "":
+    stdout.writeLine "warning: no mcu, defaulting to atmega328p"
+    mcu = "atmega328p"
+
+  try:
+      compiler.compile_file(file, mcu, options, hex, show)
+  except CatchableError:
+    let err = getCurrentException()
+    let msg = getCurrentExceptionMsg()
+    printError("Error ($#): $#" % [err.repr, msg])
+    return false
+  return true
+
+
 const
   commands = {
     "init": init,
+    "compile": compile,
   }.toTable
 
 

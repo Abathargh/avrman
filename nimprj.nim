@@ -20,7 +20,7 @@ const
 
   config_tpl = staticRead("./templates/nim/config.nims")
   base_tpl   = staticRead("./templates/nim/base.nim")
-  panic_tpl  = staticRead("./templates/nim/panicoverride.nim")
+  panic_tpl* = staticRead("./templates/nim/panicoverride.nim")
   nimble_tpl = staticRead("./templates/nim/tpl.nimble")
   flash_tpl  = staticRead("./templates/nim/tpl_flash.nimble")
   git_tpl    = staticRead("./templates/nim/gitignore")
