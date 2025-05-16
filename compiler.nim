@@ -83,19 +83,21 @@ else:
     flags = avrman_flags
 
 
-proc compile_file*(file, mcu: string; options: seq[string]; hex, show: bool) =
-  echo fmt"file: {file}, mcu: {mcu}, opts: {options}, hex: {hex}, show: {show}"
+proc compile_file*(file, mcu: string; opts: seq[string]; hex, show, ver: bool) =
   let
     mcu_flag     = mcu_map[mcu]
     (_, name, _) = splitFile(file)
     full_cmd     = flags % [mcu_flag, mcu, mcu, name, file]
-    args         = @[first] & options & full_cmd.split_whitespace()
+    args         = @[first] & opts & full_cmd.split_whitespace()
 
   with_panic_override(file):
-    let (_, cstderr, ccode) = wrap_exec_cmd(cmd, args)
+    let (cstdout, cstderr, ccode) = wrap_exec_cmd(cmd, args)
     if ccode != 0:
       stderr.writeLine &"could not compile the file, original error: {cstderr}"
       return
+
+    if ver:
+      stdout.writeLine cstdout
 
     if hex:
       const hex_cmd = "avr-objcopy"
