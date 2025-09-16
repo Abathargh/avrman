@@ -1,21 +1,24 @@
 import std/parseopt
+import std/strformat
 import std/strutils
 import std/tables
+import std/sets
 import std/os
 
 import compiler
+import device
 import nimprj
 import cprj
 
 
 const
-  version = "v0.1.0"
+  version = "v0.3.0"
 
   shortFlags = {'h', 'v'}
   longFlags  = @["help", "version"]
   usage = """
 avr manager for nim and c projects.
-    
+
     avrman [options] command [command_options]
 
 Options:
@@ -25,11 +28,12 @@ Options:
 Commands:
   init              initializes an avr project
   compile           compiles an avr file with the default avrman options
+  device             interacts with the avr devices connected to this machine
 """
 
   init_usage = """
 Initializes an avr project.
-    
+
     avrman init [options] PROJECT_NAME
 
 Options:
@@ -38,7 +42,7 @@ Options:
   -p, --prog        the progstring to use in the flash targets
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
-  --nosrc           specifies to nimble not to use the default `src` directory
+  --nosrc           specifies to nimble not to use the default src directory
   --cproject        initializes a C project instead of a nim one
   --cmake           uses CMake instead of plain make; checked only if using 
                     --cproject 
@@ -52,7 +56,7 @@ management strategy, for the standalone os.
     avrman compile [options] FILE_NAME
 
 Options:
-  -o. --option      specifies an additional option to pass to the nim compiler
+  -o, --option      specifies an additional option to pass to the nim compiler
   -m, --mcu         specifies the microcontroller part number
   -s, --show        shows the elf/hex dump instead of just compiling
   -x, --hex         compiles to hex instead of elf
@@ -60,15 +64,29 @@ Options:
   -h, --help        shows this help message
 """
 
+  device_usage = """
+Interacts with the avr devices connected to this machine. This can be used
+to list the current connected devices, get metadata related to them, perform
+simple read/write operations.
 
-proc printError(msg: string) = 
+    avrman device [options]
+
+Options:
+  -p, --port      retrieves the port associated to the device
+  -l, --list      list the names of the supported devices to be retrieved with
+                  the port option
+  -h, --help        shows this help message
+"""
+
+
+proc printError(msg: string) =
   try:
     stderr.writeLine msg
   except IOError:
     discard
 
 
-proc init*(cmd_str: string): bool =
+proc init(cmd_str: string): bool =
   var
     mcu   = ""
     fcpu  = ""
@@ -78,8 +96,8 @@ proc init*(cmd_str: string): bool =
     cproj = false
     cmake = false
     pi = initOptParser(
-      cmd_str, 
-      shortNoVal = {'s', 'h'}, 
+      cmd_str,
+      shortNoVal = {'s', 'h'},
       longNoVal = @["supported", "help", "nosrc", "cproject", "cmake"]
     )
 
@@ -95,8 +113,8 @@ proc init*(cmd_str: string): bool =
         of "nosrc":      nosrc = true
         of "cproject":   cproj = true
         of "cmake":      cmake = true
-        of "supported": nimprj.supported(); return
-        of "help": echo init_usage; return
+        of "supported": nimprj.supported(); return true
+        of "help": echo init_usage; return true
         else:
           echo "Unsupported long option $#" % opt
           return false
@@ -105,8 +123,8 @@ proc init*(cmd_str: string): bool =
         of "m": mcu  = val.toLower
         of "f": fcpu = val
         of "p": prog = val
-        of "s": nimprj.supported(); return
-        of "h": echo init_usage; return
+        of "s": nimprj.supported(); return true
+        of "h": echo init_usage; return true
         else:
           echo "Unsupported short option $#" % opt
           return false
@@ -118,7 +136,7 @@ proc init*(cmd_str: string): bool =
   if mcu == "":
     printError "you must specify an mcu"
     return false
-  
+
   if not nimprj.is_supported(mcu):
     printError "the passed mcu is not supported"
     return false
@@ -133,7 +151,7 @@ proc init*(cmd_str: string): bool =
   if proj == "":
     printError "you must specify a project name"
     return false
-  
+
   try:
     let f = fcpu.parseInt()
     if f <= 0: raise newException(ValueError, "")
@@ -152,10 +170,10 @@ proc init*(cmd_str: string): bool =
     printError("Error ($#): $#" % [err.repr, msg])
     os.removeDir(proj)
     return false
-  return true
+  true
 
 
-proc compile*(cmd_str: string): bool =
+proc compile(cmd_str: string): bool =
   var
     file    = ""
     mcu     = ""
@@ -180,7 +198,7 @@ proc compile*(cmd_str: string): bool =
       of "show":    show     = true
       of "hex":     hex      = true
       of "verbose": verbose  = true
-      of "help":    echo compile_usage; return
+      of "help":    echo compile_usage; return true
       else:
         echo "Unsupported long option $#" % opt
         return false
@@ -191,7 +209,7 @@ proc compile*(cmd_str: string): bool =
       of "s": show    = true
       of "x": hex     = true
       of "v": verbose = true
-      of "h": echo compile_usage; return
+      of "h": echo compile_usage; return true
       else:
         echo "Unsupported short option $#" % opt
         return false
@@ -209,21 +227,75 @@ proc compile*(cmd_str: string): bool =
     mcu = "atmega328p"
 
   try:
-      compiler.compile_file(file, mcu, options, hex, show, verbose)
+    compiler.compile_file(file, mcu, options, hex, show, verbose)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
     printError("Error ($#): $#" % [err.repr, msg])
     return false
-  return true
+  true
+
+proc device(cmd_str: string): bool =
+  var
+    port    = ""
+    pi = initOptParser(
+      cmd_str,
+      shortNoVal = {'p', 'l', 'h'},
+      longNoVal = @["port", "list", "help"]
+    )
+
+  for kind, opt, val in getopt(pi):
+    case pi.kind
+    of cmdEnd:
+      break
+    of cmdLongOption:
+      case opt
+      of "port": port = val
+      of "list": echo supported_devices_str; return true
+      of "help": echo device_usage; return true
+      else:
+        echo "Unsupported long option $#" % opt
+        return false
+    of cmdShortOption:
+      case opt
+      of "p": port = val
+      of "l": echo supported_devices_str; return true
+      of "h": echo device_usage; return true
+      else:
+        echo "Unsupported short option $#" % opt
+        return false
+    of cmdArgument:
+      break
+
+  if port == "":
+    printError "port requires a value"
+    return false
+
+  try:
+    if port notin supported_devices:
+      let closest = closest_guess(port)
+      printError fmt"unsupported device '{port}', did you mean '{closest}'?"
+      return false
+
+    let port_name = find_device_port(port)
+    if  port_name == "":
+      printError fmt"no connected device for '{port}'"
+      return false
+    echo port_name
+  except CatchableError:
+    let err = getCurrentException()
+    let msg = getCurrentExceptionMsg()
+    printError("Error ($#): $#" % [err.repr, msg])
+    return false
+  true
 
 
 const
   commands = {
-    "init": init,
+    "init":    avrman.init,
     "compile": compile,
+    "device":  device,
   }.toTable
-
 
 proc main() =
   var
@@ -254,7 +326,7 @@ proc main() =
   if cmd notin commands:
     printError "the passed command ('$#') is not supported" % cmd
     quit(1)
-  
+
   let cmdFunc = commands[cmd]
   if not cmdFunc p.cmdLineRest():
     quit(1)
