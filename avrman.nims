@@ -1,3 +1,3 @@
 # serial.nim bug on macos: arc/orc cause segfaults
-when defined(macos):
+when defined(macosx):
   switch("mm", "refc")

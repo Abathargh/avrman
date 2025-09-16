@@ -108,11 +108,11 @@ proc get_vid_pid_linux(dev: string): tuple[vid: uint16, pid: uint16] =
         return (meta_ids[0].parseHexInt.uint16, meta_ids[1].parseHexInt.uint16)
   (0'u16, 0'u16)
 
-template get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
+proc get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
   when defined(linux):
     get_vid_pid_linux(dev)
   else:
-    raise CatchableError("avr device is only supported on linux")
+    raise CatchableError.newException("avr device is only supported on linux")
 
 proc find_device_port*(name: string): string =
   for port in listSerialPorts():
