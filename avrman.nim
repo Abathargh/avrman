@@ -75,7 +75,7 @@ Options:
   -p, --port      retrieves the port associated to the device
   -l, --list      list the names of the supported devices to be retrieved with
                   the port option
-  -h, --help        shows this help message
+  -h, --help      shows this help message
 """
 
 
