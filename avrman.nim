@@ -28,7 +28,7 @@ Options:
 Commands:
   init              initializes an avr project
   compile           compiles an avr file with the default avrman options
-  device             interacts with the avr devices connected to this machine
+  device            interacts with the avr devices connected to this machine
 """
 
   init_usage = """
