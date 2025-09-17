@@ -1,5 +1,4 @@
-import std/[os, strformat, strutils, sets, sugar, tables]
-import serial
+import std/[dirs, os, strformat, strutils, sets, sugar, tables]
 
 
 type Device = object
@@ -94,7 +93,13 @@ proc closest_guess*(name: string): string =
   min_name
 
 
-proc get_vid_pid_linux(dev: string): tuple[vid: uint16, pid: uint16] =
+proc enumerate_serial_devices(): seq[string] =
+  for kind, path in walkDir("/dev/"):
+    if kind == pcFile and path.extractFilename.startswith("tty"):
+      result.add(path)
+
+
+proc get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
   let
     dev_name = dev.split("/")[^1]
     tty_path = fmt"/sys/class/tty/{dev_name}/device"
@@ -108,20 +113,12 @@ proc get_vid_pid_linux(dev: string): tuple[vid: uint16, pid: uint16] =
         return (meta_ids[0].parseHexInt.uint16, meta_ids[1].parseHexInt.uint16)
   (0'u16, 0'u16)
 
-proc get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
-  when defined(linux):
-    get_vid_pid_linux(dev)
-  else:
-    raise CatchableError.newException("avr device is only supported on linux")
 
 proc find_device_port*(name: string): string =
-  for port in listSerialPorts():
+  for port in enumerate_serial_devices():
     let (vid, pid) = get_vid_pid(port)
     if vid in interesting_vids:
       for device in interesting_vids[vid]:
         if pid == device.pid and name == device.name:
           return port
   ""
-
-when isMainModule:
-  echo find_device_port("Uno")
