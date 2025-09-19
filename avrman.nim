@@ -5,8 +5,8 @@ import std/tables
 import std/sets
 import std/os
 
+import device/device
 import compiler
-import device
 import nimprj
 import cprj
 
@@ -72,7 +72,7 @@ simple read/write operations.
     avrman device [options]
 
 Options:
-  -p, --port      retrieves the port associated to the device
+  -p, --port      retrieves the port associated to the specified device
   -l, --list      list the names of the supported devices to be retrieved with
                   the port option
   -h, --help      shows this help message

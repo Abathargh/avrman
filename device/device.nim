@@ -1,10 +1,31 @@
-import std/[dirs, os, strformat, strutils, sets, sugar, tables]
+## device implements some useful stuff for device discovery on various
+## platforms.
+## One thing I always wanted with this kind of libraries, was to automate
+## everything regarding the loading and discovery process
+
+import std/[dirs, os, strutils, sets, sugar, tables]
+
+## a target must define ‘enumerate_serial_devices‘ and ‘get_vid_pid‘
+when defined(linux):
+  include device_linux
+elif defined(macosx):
+  include device_macosx
+else:
+  type UnsupportedException = object of Exception
+  iterator enumerate_serial_devices(): seq[string] =
+    raise new_exception(UnsupportedException, "unsupported platform")
+
+  proc get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
+    raise new_exception(UnsupportedException, "unsupported platform")
 
 
 type Device = object
   name: string
   pid:  uint16
 
+
+# this is a table with every interesting device that may be used to flash an
+# avr mcu
 
 const interesting_vids = {
   0x3EB'u16: @[ # atmel
@@ -41,6 +62,9 @@ const interesting_vids = {
   ],
 }.toTable
 
+# The following two here are just a const sequence of the names of the device
+# above, and a const concatenated version of the same, to print with
+# avrman device -l, for convenience
 
 const supported_devices* = collect(initHashSet()):
   for device_list in interesting_vids.values:
@@ -91,28 +115,6 @@ proc closest_guess*(name: string): string =
       min_len = distance
 
   min_name
-
-
-proc enumerate_serial_devices(): seq[string] =
-  for kind, path in walkDir("/dev/"):
-    if kind == pcFile and path.extractFilename.startswith("tty"):
-      result.add(path)
-
-
-proc get_vid_pid(dev: string): tuple[vid: uint16, pid: uint16] =
-  let
-    dev_name = dev.split("/")[^1]
-    tty_path = fmt"/sys/class/tty/{dev_name}/device"
-    evt_path = fmt"/sys/class/tty/{dev_name}/device/uevent"
-
-  if dirExists(tty_path) and fileExists(evt_path):
-    for line in evt_path.lines:
-      if "PRODUCT=" in line:
-        let meta     = line.split("PRODUCT=")[^1]
-        let meta_ids = meta.split("/")
-        return (meta_ids[0].parseHexInt.uint16, meta_ids[1].parseHexInt.uint16)
-  (0'u16, 0'u16)
-
 
 proc find_device_port*(name: string): string =
   for port in enumerate_serial_devices():
