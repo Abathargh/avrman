@@ -1,4 +1,4 @@
-import std/[dirs, paths, strformat, strutils]
+import std/[dirs, strformat, strutils]
 
 # Linux = easy mode
 
