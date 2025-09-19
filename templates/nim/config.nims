@@ -10,6 +10,7 @@ switch("passC", "-mmcu=$# -DF_CPU=$#")
 switch("passL", "-mmcu=$# -DF_CPU=$#")
 switch("nimcache", ".nimcache")
 
+switch("cc", "gcc")
 switch("avr.standalone.gcc.options.linker", "-static")
 switch("avr.standalone.gcc.exe", "avr-gcc")
 switch("avr.standalone.gcc.linkerexe", "avr-gcc")

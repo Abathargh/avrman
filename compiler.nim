@@ -68,7 +68,7 @@ const
   first = "c"
   avrman_flags = """
 --os:standalone --cpu:avr --mm:none --threads:off --define:release
---define:$# --passC:"-mmcu=$#" --passL:"-mmcu=$#"
+--define:$# --passC:"-mmcu=$#" --passL:"-mmcu=$#" --cc:gcc
 --avr.standalone.gcc.options.linker:"-static"
 --avr.standalone.gcc.exe:avr-gcc
 --avr.standalone.gcc.linkerexe:avr-gcc
