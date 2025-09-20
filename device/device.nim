@@ -1,11 +1,13 @@
 ## device implements some useful stuff for device discovery on various
 ## platforms.
 ## One thing I always wanted with this kind of libraries, was to automate
-## everything regarding the loading and discovery process
+## everything regarding the loading and discovery process, so that's what this
+## is about, a generic mechanism for device and pid/vid retrieval.
 
 import std/[dirs, os, strutils, sets, sugar, tables]
 
 ## a target must define ‘enumerate_serial_devices‘ and ‘get_vid_pid‘
+
 when defined(linux):
   include device_linux
 elif defined(macosx):
@@ -20,8 +22,10 @@ else:
 
 
 type Device = object
-  name: string
+  vid:  uint16
   pid:  uint16
+  mcu:  string
+  opts: string
 
 
 # this is a table with every interesting device that may be used to flash an
@@ -40,21 +44,21 @@ const interesting_vids = {
     Device(name: "ATMEGA328P-XMINI", pid: 0x2145),
   ],
   0x2341: @[ # arduino
-    Device(name: "Uno", pid: 0x0001),
-    Device(name: "Mega2560", pid: 0x0010),
+    Device(name: "Uno", pid: 0x0001, mcu: "m328p", opts: "-b 11520"),
+    Device(name: "Mega2560", pid: 0x0010, mcu: "m2560", opts: "-D -b 11520"),
     Device(name: "LeonardoBootloader", pid: 0x0036),
     Device(name: "SerialAdapter", pid: 0x003b),
     Device(name: "DueProgrammingPort", pid: 0x003d),
     Device(name: "Due", pid: 0x003e),
     Device(name: "MegaADK", pid: 0x003f),
-    Device(name: "Mega2560R3", pid: 0x0042),
-    Device(name: "UnoR3", pid: 0x0043),
+    Device(name: "Mega2560R3", pid: 0x0042, mcu: "m2560", opts: "-D -b 11520"),
+    Device(name: "UnoR3", pid: 0x0043, mcu: "m328p", opts: "-b 11520"),
     Device(name: "MegaADKR3", pid: 0x0044),
     Device(name: "SerialR3", pid: 0x0045),
     Device(name: "ISP", pid: 0x0049),
-    Device(name: "Leonardo ", pid: 0x8036),
-    Device(name: "RobotControlBoard ", pid: 0x8038),
-    Device(name: "RobotMotorBoard ", pid: 0x8039),
+    Device(name: "Leonardo ", pid: 0x8036, mcu: "m32u4", opts: "-b 57600"),
+    Device(name: "RobotControl ", pid: 0x8038, mcu: "m32u4", opts: "-b 57600"),
+    Device(name: "RobotMotor ", pid: 0x8039, mcu: "m32u4", opts: "-b 57600"),
   ],
   0x1366: @[ # segger
     Device(name: "J-Link PLUS", pid: 0x0101),

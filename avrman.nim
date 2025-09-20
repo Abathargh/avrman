@@ -39,6 +39,7 @@ Initializes an avr project.
 Options:
   -m, --mcu         specifies the microcontroller part number
   -f, --fcpu        specifies the selected frequency
+  -d, --device      specifies the device used to program the microcontroller
   -p, --prog        the progstring to use in the flash targets
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
@@ -73,6 +74,8 @@ simple read/write operations.
 
 Options:
   -p, --port      retrieves the port associated to the specified device
+  -c, --config    retrieves the full configuration associated to the specified
+                  device
   -l, --list      list the names of the supported devices to be retrieved with
                   the port option
   -h, --help      shows this help message
@@ -90,6 +93,7 @@ proc init(cmd_str: string): bool =
   var
     mcu   = ""
     fcpu  = ""
+    dev   = ""
     prog  = ""
     proj  = ""
     nosrc = false
@@ -107,9 +111,10 @@ proc init(cmd_str: string): bool =
         break
       of cmdLongOption:
         case opt
-        of "mcu":  mcu  = val.toLower
-        of "fcpu": fcpu = val
-        of "prog": prog = val
+        of "mcu":        mcu  = val.toLower
+        of "fcpu":       fcpu = val
+        of "device":     dev  = val
+        of "prog":       prog = val
         of "nosrc":      nosrc = true
         of "cproject":   cproj = true
         of "cmake":      cmake = true
@@ -122,6 +127,7 @@ proc init(cmd_str: string): bool =
         case opt
         of "m": mcu  = val.toLower
         of "f": fcpu = val
+        of "d": dev  = val
         of "p": prog = val
         of "s": nimprj.supported(); return true
         of "h": echo init_usage; return true
@@ -145,8 +151,14 @@ proc init(cmd_str: string): bool =
     stdout.writeLine "using default F_CPU=16000000"
     f_cpu="16000000"
 
-  if prog == "":
-    stdout.writeLine "skipping flash targets generation"
+  if dev == "":
+    if prog == "":
+      stdout.writeLine "skipping flash targets generation"
+    stdout.writeLine "using default F_CPU=16000000"
+    f_cpu="16000000"
+  else:
+    if prog != "":
+      printError "cannot specify a progstring when usind --device"
 
   if proj == "":
     printError "you must specify a project name"
@@ -240,8 +252,8 @@ proc device(cmd_str: string): bool =
     port    = ""
     pi = initOptParser(
       cmd_str,
-      shortNoVal = {'p', 'l', 'h'},
-      longNoVal = @["port", "list", "help"]
+      shortNoVal = {'l', 'h'},
+      longNoVal = @["list", "help"]
     )
 
   for kind, opt, val in getopt(pi):

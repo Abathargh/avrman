@@ -25,6 +25,11 @@ const
   flash_tpl  = staticRead("./templates/nim/tpl_flash.nimble")
   git_tpl    = staticRead("./templates/nim/gitignore")
 
+  start_tpl  = "### AVRMAN CONFIGURATION START ###"
+  end_tpl    = "### AVRMAN CONFIGURATION END   ###"
+
+
+type ConfigException = object of Exception
 
 proc is_supported*(mcu: string) : bool = mcu in mcu_map 
 
@@ -58,13 +63,11 @@ proc delete_src_dir(proj, nimble_file: string) =
 
 proc generate_project*(mcu, fcpu, prog, proj: string, nosrc: bool) =
   if dirExists(proj):
-    stdout.writeLine "a directory with the current project name already exists"
-    quit(1)
+    raise new_exception(ConfigException, fmt"./{proj} already exists")
 
   if os.execShellCmd("nimble init $#" % proj) != 0:
-    stderr.writeLine "error during the project initialization"
-    quit(1)
-  
+    raise new_exception(ConfigException, "error initializing the project")
+
   setCurrentDir(proj)
     
   let mcu_def = mcu_map[mcu]
@@ -76,8 +79,8 @@ proc generate_project*(mcu, fcpu, prog, proj: string, nosrc: bool) =
     delete_src_dir(proj, filename)
 
   var f = open(filename, fmAppend)
-  defer:
-    f.close()
+  defer:  f.close()
+
   f.write(nimble_tpl)
   if prog != "":
     f.write(flash_tpl % [prog, mcu, prog, mcu])
