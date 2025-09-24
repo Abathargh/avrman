@@ -37,10 +37,12 @@ Initializes an avr project.
     avrman init [options] PROJECT_NAME
 
 Options:
-  -m, --mcu         specifies the microcontroller part number
   -f, --fcpu        specifies the selected frequency
+  -m, --mcu         specifies the microcontroller part number
   -d, --device      specifies the device used to program the microcontroller
-  -p, --prog        the progstring to use in the flash targets
+  -p, --programmer  specifies the programmer to use
+  -c, --cmdstring   the progstring to use in the flash targets
+  -t, --port
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
   --nosrc           specifies to nimble not to use the default src directory
@@ -249,11 +251,13 @@ proc compile(cmd_str: string): bool =
 
 proc device(cmd_str: string): bool =
   var
-    port    = ""
+    port      = false
+    config    = false
+    device    = ""
     pi = initOptParser(
       cmd_str,
-      shortNoVal = {'l', 'h'},
-      longNoVal = @["list", "help"]
+      shortNoVal = {'c', 'l', 'p', 'h'},
+      longNoVal = @["config", "list", "port", "help"]
     )
 
   for kind, opt, val in getopt(pi):
@@ -262,38 +266,56 @@ proc device(cmd_str: string): bool =
       break
     of cmdLongOption:
       case opt
-      of "port": port = val
-      of "list": echo supported_devices_str; return true
-      of "help": echo device_usage; return true
+      of "config": config = true
+      of "port":   port = true
+      of "list":   echo supported_names_str; return true
+      of "help":   echo device_usage; return true
       else:
         echo "Unsupported long option $#" % opt
         return false
     of cmdShortOption:
       case opt
-      of "p": port = val
-      of "l": echo supported_devices_str; return true
+      of "c": config = true
+      of "p": port   = true
+      of "l": echo supported_names_str; return true
       of "h": echo device_usage; return true
       else:
         echo "Unsupported short option $#" % opt
         return false
     of cmdArgument:
+      device = opt
       break
 
-  if port == "":
-    printError "port requires a value"
+  if device == "":
+    printError "you must specify a device name"
     return false
 
   try:
-    if port notin supported_devices:
-      let closest = closest_guess(port)
-      printError fmt"unsupported device '{port}', did you mean '{closest}'?"
+    device = device.to_lower_ascii.replace("-") # normalize name
+    if device notin supported_names:
+      let closest = closest_guess(device)
+      printError fmt"unsupported device '{device}', did you mean '{closest}'?"
       return false
 
-    let port_name = find_device_port(port)
-    if  port_name == "":
-      printError fmt"no connected device for '{port}'"
-      return false
-    echo port_name
+
+    if port:
+      let port_name = find_device_port(device)
+      if  port_name == "":
+        printError fmt"no connected device for '{device}'"
+        return false
+      echo port_name
+    elif config:
+      let conf = get_device_config(device)
+      echo conf
+    else:
+      let port_name = find_device_port(device)
+      let conf = get_device_config(device)
+      if  port_name == "":
+        printError fmt"no connected device for '{device}'"
+        return false
+
+      echo fmt"device: {device} - current port: {port_name} - prog string: {conf}"
+
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
