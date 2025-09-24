@@ -1,0 +1,273 @@
+[
+  {
+    "name": "Yun",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x8041",
+        "0x0041"
+      ],
+      "0x2341": [
+        "0x0041",
+        "0x8041"
+      ]
+    }
+  },
+  {
+    "name": "UNO",
+    "protocol": "arduino",
+    "speed": 115200,
+    "mcu": "atmega328p",
+    "dis_flush": false,
+    "id_map": {
+      "0x2A03": [
+        "0x0043"
+      ],
+      "0x2341": [
+        "0x006A",
+        "0x0243",
+        "0x0043",
+        "0x0001"
+      ]
+    }
+  },
+  {
+    "name": "UNOMini",
+    "protocol": "arduino",
+    "speed": 115200,
+    "mcu": "atmega328p",
+    "dis_flush": false,
+    "id_map": {
+      "0x2341": [
+        "0x0062"
+      ]
+    }
+  },
+  {
+    "name": "Mega",
+    "protocol": "stk500v2",
+    "speed": 115200,
+    "mcu": "atmega2560",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x0042",
+        "0x0010"
+      ],
+      "0x2341": [
+        "0x0210",
+        "0x0242",
+        "0x0010",
+        "0x0042"
+      ]
+    }
+  },
+  {
+    "name": "MegaADK",
+    "protocol": "wiring",
+    "speed": 115200,
+    "mcu": "atmega2560",
+    "dis_flush": false,
+    "id_map": {
+      "0x2A03": [
+        "0x0044",
+        "0x003f"
+      ],
+      "0x2341": [
+        "0x003f",
+        "0x0044"
+      ]
+    }
+  },
+  {
+    "name": "Leonardo",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x8036",
+        "0x0036"
+      ],
+      "0x2341": [
+        "0x0036",
+        "0x8036"
+      ]
+    }
+  },
+  {
+    "name": "LeonardoETH",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2a03": [
+        "0x0040",
+        "0x8040"
+      ]
+    }
+  },
+  {
+    "name": "Micro",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x8037",
+        "0x0037"
+      ],
+      "0x2341": [
+        "0x0237",
+        "0x8237",
+        "0x0037",
+        "0x8037"
+      ]
+    }
+  },
+  {
+    "name": "Esplora",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x803C",
+        "0x003C"
+      ],
+      "0x2341": [
+        "0x003C",
+        "0x803C"
+      ]
+    }
+  },
+  {
+    "name": "LilyPadUSB",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x1B4F": [
+        "0x9207",
+        "0x9208"
+      ]
+    }
+  },
+  {
+    "name": "RobotControl",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x8038",
+        "0x0038"
+      ],
+      "0x2341": [
+        "0x0038",
+        "0x8038"
+      ]
+    }
+  },
+  {
+    "name": "RobotMotor",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2A03": [
+        "0x8039",
+        "0x0039"
+      ],
+      "0x2341": [
+        "0x0039",
+        "0x8039"
+      ]
+    }
+  },
+  {
+    "name": "Gemma",
+    "protocol": "",
+    "speed": "",
+    "mcu": "attiny85",
+    "dis_flush": false,
+    "id_map": {
+      "0x2341": [
+        "0x0c9f"
+      ]
+    }
+  },
+  {
+    "name": "CircuitPlayground",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x239A": [
+        "0x8011"
+      ]
+    }
+  },
+  {
+    "name": "YunMini",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2a03": [
+        "0x0050",
+        "0x8050"
+      ]
+    }
+  },
+  {
+    "name": "Industrial101",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2a03": [
+        "0x0056",
+        "0x8056"
+      ]
+    }
+  },
+  {
+    "name": "LininoOne",
+    "protocol": "avr109",
+    "speed": 57600,
+    "mcu": "atmega32u4",
+    "dis_flush": true,
+    "id_map": {
+      "0x2a03": [
+        "0x0001",
+        "0x8001"
+      ]
+    }
+  },
+  {
+    "name": "UNOWiFi",
+    "protocol": "arduino",
+    "speed": 115200,
+    "mcu": "atmega328p",
+    "dis_flush": false,
+    "id_map": {
+      "0x2A03": [
+        "0x0057"
+      ]
+    }
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "ice",
+    "protocol": "atmelice",
+    "id_map": {
+      "0x03EB": ["0x2141"]
+    }
+  },
+  {
+    "name": "JTAG-ICE-mkII",
+    "protocol": "jtag2",
+    "id_map": {
+      "0x03EB": ["0x2103"]
+    }
+  },
+  {
+    "name": "AVR-ISP-mkII",
+    "protocol": "avrispv2",
+    "id_map": {
+      "0x03EB": ["0x2104"]
+    }
+  },
+  {
+    "name": "STK600",
+    "protocol": "stk600",
+    "id_map": {
+      "0x03EB": ["0x2106"]
+    }
+  }
+]
