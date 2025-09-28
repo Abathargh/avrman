@@ -41,8 +41,9 @@ Options:
   -m, --mcu         specifies the microcontroller part number
   -d, --device      specifies the device used to program the microcontroller
   -p, --programmer  specifies the programmer to use
-  -c, --cmdstring   the progstring to use in the flash targets
-  -t, --port
+  -P, --port        specifies the port to use to program the device
+  --cmdstring       the progstring to use in the flash targets, ignores
+                    every other programming option when specified
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
   --nosrc           specifies to nimble not to use the default src directory
@@ -92,6 +93,10 @@ proc printError(msg: string) =
 
 
 proc init(cmd_str: string): bool =
+  if cmd_str == "":
+    printError "you must specify a project name"
+    return false
+
   var
     mcu   = ""
     fcpu  = ""
@@ -188,6 +193,10 @@ proc init(cmd_str: string): bool =
 
 
 proc compile(cmd_str: string): bool =
+  if cmd_str == "":
+    printError "you must specify a file name"
+    return false
+
   var
     file    = ""
     mcu     = ""
@@ -250,6 +259,10 @@ proc compile(cmd_str: string): bool =
   true
 
 proc device(cmd_str: string): bool =
+  if cmd_str == "":
+    printError "you must specify a device name"
+    return false
+
   var
     port      = false
     config    = false
@@ -296,7 +309,6 @@ proc device(cmd_str: string): bool =
       let closest = closest_guess(device)
       printError fmt"unsupported device '{device}', did you mean '{closest}'?"
       return false
-
 
     if port:
       let port_name = find_device_port(device)
