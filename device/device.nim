@@ -22,12 +22,12 @@ else:
 
 
 type Device* = object
-  name:     string
-  protocol: string
-  mcu:      string
-  ids:      Table[uint16, OrderedSet[uint16]]
-  speed:    int
-  flush:    bool
+  name*:     string
+  protocol*: string
+  mcu*:      string
+  ids*:      Table[uint16, OrderedSet[uint16]]
+  speed*:    int
+  flush*:    bool
 
 
 # this is a table with every interesting device that may be used to flash an
@@ -48,9 +48,9 @@ proc parse_dev(node: JsonNode): Device =
   result.ids      = parse_ids node["id_map"]
 
   # non-mandatory fields
-  result.mcu      =     get_str(node.get_or_default("mcu"), "")
-  result.speed    =     get_int( node.get_or_default("speed"), -1)
-  result.flush    = not get_bool(node.get_or_default("dis_flush"), false)
+  result.mcu      = get_str(node.get_or_default("mcu"), "")
+  result.speed    = get_int( node.get_or_default("speed"), -1)
+  result.flush    = get_bool(node.get_or_default("dis_flush"), false)
 
 
 const devices* = (proc(): Table[string, Device] =

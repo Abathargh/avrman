@@ -19,4 +19,7 @@ suite "nim codegen":
     check(no_devcmd == "-c atmelice -p m328p -P /dev/ttyTEST")
 
     let dev_noport = generate_progstr("", "uno", "", "", "")
-    check(dev_noport == """-c arduino -p atmega328p -B 115200 -D -P " & port & """")
+    check(dev_noport == """-c arduino -p atmega328p -B 115200 -P " & port & """")
+
+    let dev_port = generate_progstr("", "mega", "", "", "/dev/ttyMock")
+    check(dev_port == "-c stk500v2 -p atmega2560 -B 115200 -D -P /dev/ttyMock")
