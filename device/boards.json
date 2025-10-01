@@ -5,6 +5,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x8041",
@@ -22,6 +23,7 @@
     "speed": 115200,
     "mcu": "atmega328p",
     "dis_flush": false,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x0043"
@@ -40,6 +42,7 @@
     "speed": 115200,
     "mcu": "atmega328p",
     "dis_flush": false,
+    "frequency": 16000000,
     "id_map": {
       "0x2341": [
         "0x0062"
@@ -52,6 +55,7 @@
     "speed": 115200,
     "mcu": "atmega2560",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x0042",
@@ -71,6 +75,7 @@
     "speed": 115200,
     "mcu": "atmega2560",
     "dis_flush": false,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x0044",
@@ -88,6 +93,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x8036",
@@ -105,6 +111,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2a03": [
         "0x0040",
@@ -118,6 +125,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x8037",
@@ -137,6 +145,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x803C",
@@ -154,6 +163,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 8000000,
     "id_map": {
       "0x1B4F": [
         "0x9207",
@@ -166,6 +176,7 @@
     "protocol": "avr109",
     "speed": 57600,
     "mcu": "atmega32u4",
+    "frequency": 16000000,
     "dis_flush": true,
     "id_map": {
       "0x2A03": [
@@ -184,6 +195,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x8039",
@@ -201,6 +213,7 @@
     "speed": "",
     "mcu": "attiny85",
     "dis_flush": false,
+    "frequency": 8000000,
     "id_map": {
       "0x2341": [
         "0x0c9f"
@@ -213,6 +226,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 8000000,
     "id_map": {
       "0x239A": [
         "0x8011"
@@ -225,6 +239,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2a03": [
         "0x0050",
@@ -237,6 +252,7 @@
     "protocol": "avr109",
     "speed": 57600,
     "mcu": "atmega32u4",
+    "frequency": 16000000,
     "dis_flush": true,
     "id_map": {
       "0x2a03": [
@@ -251,6 +267,7 @@
     "speed": 57600,
     "mcu": "atmega32u4",
     "dis_flush": true,
+    "frequency": 16000000,
     "id_map": {
       "0x2a03": [
         "0x0001",
@@ -264,6 +281,7 @@
     "speed": 115200,
     "mcu": "atmega328p",
     "dis_flush": false,
+    "frequency": 16000000,
     "id_map": {
       "0x2A03": [
         "0x0057"
