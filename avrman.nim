@@ -7,9 +7,7 @@ import std/os
 
 import device/device
 import compiler
-import nimprj
-import cprj
-
+import codegen
 
 const
   version = "v0.3.0"
@@ -42,8 +40,6 @@ Options:
   -d, --device      specifies the device used to program the microcontroller
   -p, --programmer  specifies the programmer to use
   -P, --port        specifies the port to use to program the device
-  --cmdstring       the progstring to use in the flash targets, ignores
-                    every other programming option when specified
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
   --nosrc           specifies to nimble not to use the default src directory
@@ -77,8 +73,6 @@ simple read/write operations.
 
 Options:
   -p, --port      retrieves the port associated to the specified device
-  -c, --config    retrieves the full configuration associated to the specified
-                  device
   -l, --list      list the names of the supported devices to be retrieved with
                   the port option
   -h, --help      shows this help message
@@ -98,14 +92,16 @@ proc init(cmd_str: string): bool =
     return false
 
   var
-    mcu   = ""
-    fcpu  = ""
-    dev   = ""
-    prog  = ""
-    proj  = ""
-    nosrc = false
-    cproj = false
-    cmake = false
+    mcu     = ""
+    fcpu    = ""
+    devname = ""
+    port    = ""
+    proj    = ""
+    program = ""
+    nosrc   = false
+    cproj   = false
+    cmake   = false
+
     pi = initOptParser(
       cmd_str,
       shortNoVal = {'s', 'h'},
@@ -118,25 +114,27 @@ proc init(cmd_str: string): bool =
         break
       of cmdLongOption:
         case opt
-        of "mcu":        mcu  = val.toLower
-        of "fcpu":       fcpu = val
-        of "device":     dev  = val
-        of "prog":       prog = val
-        of "nosrc":      nosrc = true
-        of "cproject":   cproj = true
-        of "cmake":      cmake = true
-        of "supported": nimprj.supported(); return true
+        of "mcu":        mcu     = val.toLower
+        of "fcpu":       fcpu    = val
+        of "device":     devname = val
+        of "programmer": program = val
+        of "port":       port    = val
+        of "nosrc":      nosrc   = true
+        of "cproject":   cproj   = true
+        of "cmake":      cmake   = true
+        of "supported": supported(); return true
         of "help": echo init_usage; return true
         else:
           echo "Unsupported long option $#" % opt
           return false
       of cmdShortOption:
         case opt
-        of "m": mcu  = val.toLower
-        of "f": fcpu = val
-        of "d": dev  = val
-        of "p": prog = val
-        of "s": nimprj.supported(); return true
+        of "m": mcu     = val.toLower
+        of "f": fcpu    = val
+        of "d": devname = val
+        of "p": program = val
+        of "P": port    = val
+        of "s": supported(); return true
         of "h": echo init_usage; return true
         else:
           echo "Unsupported short option $#" % opt
@@ -146,43 +144,50 @@ proc init(cmd_str: string): bool =
         # assert only arg?
         break
 
-  if mcu == "":
-    printError "you must specify an mcu"
+  # is the passed device (if any) a programmer?
+  let norm_dev = devname.to_lower_ascii.replace("-", "")
+  let is_prog  = device.is_supported(norm_dev) and get_device(norm_dev).mcu != ""
+
+  if (norm_dev == "" or is_prog) and mcu == "":
+    printError "you must specify an mcu or a mcu-based device"
     return false
 
-  if not nimprj.is_supported(mcu):
+  if not codegen.is_supported(mcu):
     printError "the passed mcu is not supported"
     return false
-
-  if fcpu == "":
-    stdout.writeLine "using default F_CPU=16000000"
-    f_cpu="16000000"
-
-  if dev == "":
-    if prog == "":
-      stdout.writeLine "skipping flash targets generation"
-    stdout.writeLine "using default F_CPU=16000000"
-    f_cpu="16000000"
-  else:
-    if prog != "":
-      printError "cannot specify a progstring when usind --device"
 
   if proj == "":
     printError "you must specify a project name"
     return false
 
-  try:
-    let f = fcpu.parseInt()
-    if f <= 0: raise newException(ValueError, "")
-  except ValueError:
-    printError "you must pass a valid fcpu (positive integer)"
-    return false
+  # if we're here, we have a valid mcu and project
 
   try:
+    var device = default(Device)
+
+    if devname != "":
+      device = get_device(devname)
+
+    if program != "": device.protocol = program
+    if mcu     != "": device.mcu = mcu
+
+    if fcpu == "" and device.freq == 0:
+      stdout.writeLine "using default F_CPU=16000000"
+      device.freq = 16_000_000
+
+    if fcpu != "":
+      try:
+        let f = fcpu.parseInt()
+        if f <= 0: raise newException(ValueError, "")
+        device.freq = f
+      except ValueError:
+        printError "you must pass a valid fcpu (positive integer)"
+        return false
+
     if cproj:
-      cprj.generate_project(mcu, fcpu, prog, proj, cmake)
+      generate_c_project(device, port, proj, cmake)
     else:
-      nimprj.generate_project(mcu, fcpu, prog, proj, nosrc)
+      generate_nim_project(device, port, proj, nosrc)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
@@ -265,11 +270,10 @@ proc device(cmd_str: string): bool =
 
   var
     port      = false
-    config    = false
-    device    = ""
+    devstr    = ""
     pi = initOptParser(
       cmd_str,
-      shortNoVal = {'c', 'l', 'p', 'h'},
+      shortNoVal = {'l', 'p', 'h'},
       longNoVal = @["config", "list", "port", "help"]
     )
 
@@ -279,7 +283,6 @@ proc device(cmd_str: string): bool =
       break
     of cmdLongOption:
       case opt
-      of "config": config = true
       of "port":   port = true
       of "list":   echo supported_names_str; return true
       of "help":   echo device_usage; return true
@@ -288,7 +291,6 @@ proc device(cmd_str: string): bool =
         return false
     of cmdShortOption:
       case opt
-      of "c": config = true
       of "p": port   = true
       of "l": echo supported_names_str; return true
       of "h": echo device_usage; return true
@@ -296,37 +298,30 @@ proc device(cmd_str: string): bool =
         echo "Unsupported short option $#" % opt
         return false
     of cmdArgument:
-      device = opt
+      devstr = opt
       break
 
-  if device == "":
+  if devstr == "":
     printError "you must specify a device name"
     return false
 
   try:
-    device = device.to_lower_ascii.replace("-") # normalize name
-    if device notin supported_names:
-      let closest = closest_guess(device)
-      printError fmt"unsupported device '{device}', did you mean '{closest}'?"
+    if not device.is_supported(devstr):
+      let closest = closest_guess(devstr)
+      printError fmt"unsupported device '{devstr}', did you mean '{closest}'?"
+      return false
+
+    let device    = get_device(devstr)
+    let port_name = device.find_port()
+    if  port_name == "":
+      printError fmt"no connected device for '{device}'"
       return false
 
     if port:
-      let port_name = find_device_port(device)
-      if  port_name == "":
-        printError fmt"no connected device for '{device}'"
-        return false
       echo port_name
-    elif config:
-      let conf = get_device_config(device)
-      echo conf
     else:
-      let port_name = find_device_port(device)
-      let conf = get_device_config(device)
-      if  port_name == "":
-        printError fmt"no connected device for '{device}'"
-        return false
-
-      echo fmt"device: {device} - current port: {port_name} - prog string: {conf}"
+      let curr_pstr = device.generate_progstr(port_name)
+      echo fmt"device: {device} - port: {port_name} - prog string: {curr_pstr}"
 
   except CatchableError:
     let err = getCurrentException()
