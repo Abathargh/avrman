@@ -313,15 +313,19 @@ proc device(cmd_str: string): bool =
 
     let device    = get_device(devstr)
     let port_name = device.find_port()
-    if  port_name == "":
-      printError fmt"no connected device for '{device}'"
-      return false
 
     if port:
+      if  port_name == "":
+        printError fmt"no connected device for '{devstr}'"
+        return false
       echo port_name
     else:
       let curr_pstr = device.generate_progstr(port_name)
-      echo fmt"device: {device} - port: {port_name} - prog string: {curr_pstr}"
+      let port_str  = if port_name == "": "not connected" else: port_name
+      echo fmt """{device.name}
+      port:        {port_str}
+      prog_string: {curr_pstr}
+      """
 
   except CatchableError:
     let err = getCurrentException()
