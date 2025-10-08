@@ -1,12 +1,5 @@
-import std/strformat
-import std/strutils
-import std/streams
-import std/osproc
-import std/tables
-import std/paths
-import std/files
-import std/os
-import nimprj
+import std/[strformat, strutils, streams, osproc, tables, paths, files, os]
+import codegen
 
 
 template withDir(dir: string, body: untyped): untyped =
