@@ -1,9 +1,6 @@
-import std/[os, strutils]
-
 # IOKit and CoureFoundation procedure wrapping for nim
 # This was quite a... fun? experience which I would not want to repeat any time
 # soon lol
-
 
 {.passL: "-framework IOKit".}
 {.passL: "-framework CoreFoundation".}
@@ -137,7 +134,7 @@ proc get_vid_pid(port: string): tuple[vid: uint16, pid: uint16] =
 
   for device in io_iterator(iter):
     let callout = get_cfs_string_prop(device, "IOCalloutDevice")
-    if callout.endsWith(port):
+    if  callout.endsWith(port):
       var parent:      IoRegEntry
       var grandparent: IoRegEntry
       with_parent(device, parent):

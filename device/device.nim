@@ -27,11 +27,59 @@ type Device* = object
   mcu*:      string
   ids*:      Table[uint16, OrderedSet[uint16]]
   speed*:    int
+  freq*:     int
   flush*:    bool
 
+const port_identifier = "dev_port" # discovery variable in nimble/make tasks
 
-# this is a table with every interesting device that may be used to flash an
-# avr mcu
+proc generate_progstr*(dev: Device, port: string = ""): string =
+  ## this generates the prog string for avrdude, that will contain all
+  ## the needed information to perform the programming. Some parts of this
+  ## string are contained within the nimble templates, as they are not
+  ## to be customized. The user should be either be able to:
+  ##  - pass a fully custom progstring, in which case we ignore every other arg
+  ##  - pass a device, which contains
+
+  result = fmt"-c {dev.protocol} -p {dev.mcu}"
+
+  if dev.speed != 0: result.add fmt" -b {dev.speed}"
+  if dev.flush:      result.add fmt" -D"
+
+  if port == "":
+    result.add fmt""" -P " & {port_identifier} & """"
+  else:
+    result.add fmt" -P {port}"
+
+
+proc find_port*(dev: Device): string =
+  for port in enumerate_serial_devices():
+    let (vid, pid) = get_vid_pid(port)
+    if vid in dev.ids and pid in dev.ids[vid]:
+      return port
+  ""
+
+
+type FlashTarget* = enum
+  Nimble
+  Make
+  CMake
+
+
+proc generate_discovery*(dev: Device, target: FlashTarget = Nimble): string =
+  const nim_disc = fmt"let ({port_identifier}, code) = " &
+                    """gorge_ex("avrman device -p $#")"""
+  const c_disc   = fmt"{port_identifier}=$(avrman device -p $#)"
+
+  # early exit: this cannot be a discoverable device
+  if dev.name == "":
+    return ""
+
+  case target
+  of Nimble:
+    nim_disc % [dev.name]
+  of Make, CMake:  # TODO CMake
+    c_disc   % [dev.name]
+
 
 proc parse_ids(node: JsonNode): Table[uint16, OrderedSet[uint16]] =
   for key, val in node.pairs:
@@ -43,17 +91,18 @@ proc parse_ids(node: JsonNode): Table[uint16, OrderedSet[uint16]] =
 
 proc parse_dev(node: JsonNode): Device =
   # mandatory fields
-  result.name     = get_str   node["name"]
-  result.protocol = get_str   node["protocol"]
-  result.ids      = parse_ids node["id_map"]
+  result.name      = get_str   node["name"]
+  result.protocol  = get_str   node["protocol"]
+  result.ids       = parse_ids node["id_map"]
 
   # non-mandatory fields
-  result.mcu      = get_str(node.get_or_default("mcu"), "")
-  result.speed    = get_int( node.get_or_default("speed"), -1)
-  result.flush    = get_bool(node.get_or_default("dis_flush"), false)
+  result.mcu       = get_str( node.get_or_default("mcu"), "")
+  result.freq      = get_int( node.get_or_default("frequency"), 0)
+  result.speed     = get_int( node.get_or_default("speed"), 0)
+  result.flush     = get_bool(node.get_or_default("dis_flush"), false)
 
 
-const devices* = (proc(): Table[string, Device] =
+const devices = (proc(): Table[string, Device] =
   let boards = "device/boards.json".read_file.parse_json
   let progs  = "device/programmers.json".read_file.parse_json
   for board in boards:
@@ -71,7 +120,7 @@ const devices* = (proc(): Table[string, Device] =
 # above, and a const concatenated version of the same, to print with
 # avrman device -l, for convenience
 
-const supported_names* = collect(initHashSet()):
+const supported_names = collect(initHashSet()):
   for name in devices.keys:
     {name}
 
@@ -106,32 +155,20 @@ proc closest_guess*(name: string): string =
   var min_name = ""
   var min_len  = int.high
 
+  let normalized_name = name.to_lower_ascii.replace("-", "")
+
   for device_name in supported_names:
-    let distance = levenshtein(name, device_name)
+    let distance = levenshtein(normalized_name, device_name)
     if distance < min_len:
       min_name = device_name
       min_len = distance
   min_name
 
 
-proc same_name(s1, s2: string): bool =
-  let trim1 = s1.to_lower_ascii.replace("_", "")
-  trim1 == s2
+proc is_supported*(dev_name: string): bool =
+  dev_name.to_lower_ascii.replace("-", "") in supported_names
 
 
-proc find_device_port*(name: string): string =
-  for port in enumerate_serial_devices():
-    let (vid, pid) = get_vid_pid(port)
-    for dev_name, dev in devices.pairs:
-      if vid in dev.ids and pid in dev.ids[vid] and same_name(name, dev_name):
-        return port
-  ""
-
-
-proc get_device_config*(name: string): string =
-  let dev = devices[name]
-  var conf_str = fmt"-c {dev.protocol}"
-  if dev.mcu   != "": conf_str.add fmt" -p {dev.mcu}"
-  if dev.speed != -1: conf_str.add fmt" -b {dev.speed}"
-  if dev.flush:       conf_str.add fmt" -D"
-  conf_str
+proc get_device*(dev_name: string): Device =
+  let name = dev_name.to_lower_ascii.replace("-", "")
+  devices[name]
