@@ -13,3 +13,4 @@ task clear, "Deletes the previously built compiler artifacts":
   rmFile(bin[0] & ".hex")
   rmFile(bin[0] & ".bin")
   rmDir(".nimcache")
+

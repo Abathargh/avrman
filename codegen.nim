@@ -84,7 +84,7 @@ proc generate_nim_project*(dev: Device, port, proj: string, nosrc: bool) =
   if dev.name != "" or port != "":
     let progstr = dev.generate_progstr(port)
     let discovery = if port != "": "" else: dev.generate_discovery()
-    f.write(flash_tpl % [discovery, progstr])
+    f.write(flash_tpl % [discovery, progstr, discovery, progstr])
   
   if not nosrc:
     setCurrentDir("./src")

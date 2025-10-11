@@ -66,14 +66,17 @@ type FlashTarget* = enum ## \
   Make
   CMake
 
+const
+  c_disc   = fmt"dev_port=$(avrman device -p $#)"
+  nim_disc = fmt"""
+  let (dev_port, code) = gorge_ex("avrman device -p $#")
+  if code != 0:
+    echo dev_port
+    return
+  """
 
 proc generate_discovery*(dev: Device, target: FlashTarget = Nimble): string =
-  const nim_disc = fmt"let ({port_identifier}, code) = " &
-                    """gorge_ex("avrman device -p $#")"""
-  const c_disc   = fmt"{port_identifier}=$(avrman device -p $#)"
-
-  # early exit: this cannot be a discoverable device
-  if dev.name == "":
+  if dev.name == "": # early exit: this cannot be a discoverable device
     return ""
 
   case target

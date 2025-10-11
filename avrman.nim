@@ -1,13 +1,8 @@
-import std/parseopt
-import std/strformat
-import std/strutils
-import std/tables
-import std/sets
-import std/os
-
+import std/[parseopt, strformat, strutils, tables, os]
 import device/device
 import compiler
 import codegen
+
 
 const
   version = "v0.3.0"
@@ -146,15 +141,6 @@ proc init(cmd_str: string): bool =
 
   # is the passed device (if any) a programmer?
   let norm_dev = devname.to_lower_ascii.replace("-", "")
-  let is_prog  = device.is_supported(norm_dev) and get_device(norm_dev).mcu != ""
-
-  if (norm_dev == "" or is_prog) and mcu == "":
-    printError "you must specify an mcu or a mcu-based device"
-    return false
-
-  if not codegen.is_supported(mcu):
-    printError "the passed mcu is not supported"
-    return false
 
   if proj == "":
     printError "you must specify a project name"
@@ -163,31 +149,39 @@ proc init(cmd_str: string): bool =
   # if we're here, we have a valid mcu and project
 
   try:
-    var device = default(Device)
+    var dev = default(Device)
 
-    if devname != "":
-      device = get_device(devname)
+    if not device.is_supported(norm_dev):
+      printError "the passed device is not supported"
+      return false
 
-    if program != "": device.protocol = program
-    if mcu     != "": device.mcu = mcu
+    if norm_dev != "":
+      dev = get_device(norm_dev)
 
-    if fcpu == "" and device.freq == 0:
+    if program != "": dev.protocol = program
+    if mcu     != "": dev.mcu = mcu
+
+    if not codegen.is_supported(dev.mcu):
+      printError "the passed mcu is not supported"
+      return false
+
+    if fcpu == "" and dev.freq == 0:
       stdout.writeLine "using default F_CPU=16000000"
-      device.freq = 16_000_000
+      dev.freq = 16_000_000
 
     if fcpu != "":
       try:
         let f = fcpu.parseInt()
         if f <= 0: raise newException(ValueError, "")
-        device.freq = f
+        dev.freq = f
       except ValueError:
         printError "you must pass a valid fcpu (positive integer)"
         return false
 
     if cproj:
-      generate_c_project(device, port, proj, cmake)
+      generate_c_project(dev, port, proj, cmake)
     else:
-      generate_nim_project(device, port, proj, nosrc)
+      generate_nim_project(dev, port, proj, nosrc)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
