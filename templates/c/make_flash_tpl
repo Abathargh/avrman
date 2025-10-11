@@ -5,9 +5,12 @@ OBJS=$$(SRCS:%.c=build/%.o)
 INC=-I ./inc
 
 # MCU configuration
-# Set MCU type, clock frequency and programmer
+# Set MCU type and clock frequency
 MCU=$#
 CLOCK_FREQ=$#
+
+# Programmer configuration
+$#
 PROG_STR=$#
 
 # Compiler flags
@@ -27,23 +30,22 @@ PROJ_BLD=$$(BUILD_DIR)/$$(PROJ_NAME)
 all: $$(PROJ_BLD).elf
 
 $$(PROJ_BLD).elf: $$(OBJS)
-	$$(CC) -o $$@ $$^ $$(INC) $$(CFLAGS) $$(OPT_FLAGS) $$(MCU_FLAGS)
+	$$(CC) -o $$@ $$^ $$(INC) $$(CFLAGS) $$(OPT_FLAGS)
 	$$(OBJCOPY) -j .text -j .data -O ihex $$@ $$(PROJ_BLD).hex
 	$$(OBJCOPY) -j .text -j .data -O binary $$@ $$(PROJ_BLD).bin
 
-
 build/%.o: %.c
 	mkdir -p build/src
-	$$(CC) -c -o $$@ $$(INC) $$(CFLAGS) $$(OPT_FLAGS) $$(MCU_FLAGS) $$<
+	$$(CC) -c -o $$@ $$(INC) $$(CFLAGS) $$(OPT_FLAGS) $$<
 
 release: OPT_FLAGS=-O2 -DNDEBUG
 release: $$(PROJ_BLD).elf
 
 flash:
-	avrdude -c $$(PROG_STR) -p $$(MCU) -U flash:w:$$(PROJ_BLD).hex:i
+	avrdude $$(PROG_STR) -U flash:w:$$(PROJ_BLD).hex:i
 
 flash-debug:
-	avrdude -c $$(PROG_STR) -p $$(MCU) -U flash:w:$$(PROJ_BLD).elf:e
+	avrdude $$(PROG_STR) -U flash:w:$$(PROJ_BLD).elf:e
 
 clean:
 	rm -rf build

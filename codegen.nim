@@ -118,7 +118,7 @@ proc generate_c_project*(dev: Device, port, proj: string, cmake: bool) =
   else:
     if dev.name != "" or port != "":
       let disc    = dev.generate_discovery(FlashTarget.Make)
-      let progstr = dev.generate_progstr(port)
+      let progstr = dev.generate_progstr(port, FlashTarget.Make)
       writeFile("Makefile", makef_tpl % [dev.mcu, $dev.freq, disc, progstr])
     else:
       writeFile("Makefile", make_tpl  % [dev.mcu, $dev.freq])
