@@ -1,4 +1,4 @@
-requires "avr_io >= 0.4.0"
+requires "avr_io >= 0.5.0"
 
 after build:
   when defined(windows):
