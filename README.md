@@ -6,13 +6,18 @@ It is tightly coupled with the [avr_io](https://github.com/Abathargh/avr_io)
 library, which is not a dependency, but it is used as the base dependency for 
 projects created with this tool.
 
-- [avrman](#avrman)
-  - [Dependencies](#dependencies)
-  - [Build](#build)
-  - [Usage](#usage)
-    - [Init](#init)
-    - [Creating C projects](#creating-c-projects)
-  - [License](#license)
+<!-- TOC -->
+* [avrman](#avrman)
+  * [Dependencies](#dependencies)
+  * [Notes](#notes)
+  * [Build](#build)
+  * [Usage](#usage)
+    * [Init](#init)
+    * [Creating C projects](#creating-c-projects)
+  * [Compile](#compile)
+  * [Device](#device-)
+  * [License](#license)
+<!-- TOC -->
 
 ## Dependencies
 
