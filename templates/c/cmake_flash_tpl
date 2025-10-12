@@ -51,12 +51,12 @@ add_custom_command(TARGET $${PROJECT_NAME}.elf
 
 add_custom_target(flash
 	DEPENDS $${PROJECT_NAME}.elf
-	COMMAND avrdude -c $${PROG_STR} -p $${MCU} -U flash:w:$${PROJECT_NAME}.hex:i
+	COMMAND avrdude $${PROG_STR} -U flash:w:$${PROJECT_NAME}.hex:i
 	COMMENT "flashes the hex file onto the MCU"
 )
 
 add_custom_target(flash-debug
 	DEPENDS $${PROJECT_NAME}.elf
-	COMMAND avrdude -c $${PROG_STR} -p $${MCU} -U flash:w:$${PROJECT_NAME}.elf:e
+	COMMAND avrdude $${PROG_STR} -U flash:w:$${PROJECT_NAME}.elf:e
 	COMMENT "flashes the elf file onto the MCU"
 )

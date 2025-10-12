@@ -111,8 +111,10 @@ proc generate_c_project*(dev: Device, port, proj: string, cmake: bool) =
 
   if cmake:
     if dev.name != "" or port != "":
-      # TODO CMake port discovery - study how to execute stuff with cmake
-      writeFile("CMakeLists.txt", cmakef_tpl % [dev.mcu, $dev.freq, ""])
+      if port == "":
+        stdout.writeLine "warning: port discovery is not supported with CMake"
+      let progstr = dev.generate_progstr(port, FlashTarget.Make)
+      writeFile("CMakeLists.txt", cmakef_tpl % [dev.mcu, $dev.freq, progstr])
     else:
       writeFile("CMakeLists.txt", cmake_tpl  % [dev.mcu, $dev.freq])
   else:

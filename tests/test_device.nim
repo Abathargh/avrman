@@ -11,7 +11,6 @@ suite "device tests":
     let prog2 = dev2.generate_progstr("/dev/ttyMOCK")
     check(prog2 == "-c arduino -p atmega328p -P /dev/ttyMOCK")
 
-
     let dev3  = Device(mcu: "m2560", protocol: "stk500v2", speed: 115200,
                        flush: true)
     let prog3 = dev3.generate_progstr("/dev/ttyMOCK")
