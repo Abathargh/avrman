@@ -22,6 +22,12 @@ should be separately installed.
 
 **Requires nim >= 2.0.0.**
 
+## Notes
+
+- Currently tested with avr-gcc 15.2.0, binutils 2.45, avr-libc 2.2.1.
+- N.B. Port discovery is only available on linux and macosx.
+
+
 ## Build
 
 ```bash 
