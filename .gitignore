@@ -13,3 +13,4 @@ nimble.paths
 
 /tests/*
 !/tests/*.nim
+nimbledeps
