@@ -4,7 +4,8 @@
 ## everything regarding the loading and discovery process, so that's what this
 ## is about, a generic mechanism for device and pid/vid retrieval.
 
-import std/[dirs, json, os, sequtils, strformat, strutils, sets, sugar, tables]
+import std/[dirs, json, os, osproc, sequtils, strformat, strutils, sets]
+import std/[sugar, tables]
 
 ## a target must define ‘enumerate_serial_devices‘ and ‘get_vid_pid‘
 
@@ -194,3 +195,22 @@ proc get_device*(dev_name: string): Device =
   ## supported by the tool. Use with `is_supported`, may raise `KeyError`.
   let name = dev_name.to_lower_ascii.replace("-", "")
   devices[name]
+
+
+proc program_device*(dev: Device, fw_path: string) =
+  ## Programs the passed firmware on the specified device, if found.
+  if not file_exists(fw_path):
+    raise new_exception(ValueError, fmt"cannot find file '{fw_path}'")
+
+  let port = dev.find_port()
+  if port == "":
+    raise new_exception(ValueError, fmt"cannot find port for '{dev.name}'")
+
+  let progstr = dev.generate_progstr(port)
+  let (_, _, ext) = fw_path.split_file()
+  if ext != ".hex" and ext != ".elf":
+    raise new_exception(ValueError, "unsupported file type, expected: hex/elf")
+
+  let prog_type = if ext == ".hex": "i" else: "e"
+  let cmd = fmt"avrdude {progstr} -U flash:w:{fw_path}:{prog_type}"
+  discard exec_cmd(cmd)

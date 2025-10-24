@@ -67,6 +67,7 @@ simple read/write operations.
     avrman device [options]
 
 Options:
+  -f, --flash     flashes a file (hex or elf) onto the specified device
   -p, --port      retrieves the port associated to the specified device
   -l, --list      list the names of the supported devices to be retrieved with
                   the port option
@@ -264,11 +265,12 @@ proc device(cmd_str: string): bool =
 
   var
     port      = false
+    flash     = ""
     devstr    = ""
     pi = initOptParser(
       cmd_str,
       shortNoVal = {'l', 'p', 'h'},
-      longNoVal = @["config", "list", "port", "help"]
+      longNoVal = @["list", "port", "help"]
     )
 
   for kind, opt, val in getopt(pi):
@@ -277,7 +279,8 @@ proc device(cmd_str: string): bool =
       break
     of cmdLongOption:
       case opt
-      of "port":   port = true
+      of "flash":  flash = val
+      of "port":   port  = true
       of "list":   echo supported_names_str; return true
       of "help":   echo device_usage; return true
       else:
@@ -285,7 +288,8 @@ proc device(cmd_str: string): bool =
         return false
     of cmdShortOption:
       case opt
-      of "p": port   = true
+      of "f": flash = val
+      of "p": port  = true
       of "l": echo supported_names_str; return true
       of "h": echo device_usage; return true
       else:
@@ -308,7 +312,9 @@ proc device(cmd_str: string): bool =
     let device    = get_device(devstr)
     let port_name = device.find_port()
 
-    if port:
+    if flash != "":
+      device.program_device(flash)
+    elif port:
       if  port_name == "":
         printError fmt"no connected device for '{devstr}'"
         return false
@@ -320,7 +326,8 @@ proc device(cmd_str: string): bool =
       port:        {port_str}
       prog_string: {curr_pstr}
       """
-
+  except ValueError as ve:
+    stderr.write_line(ve.msg)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
