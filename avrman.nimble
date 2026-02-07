@@ -1,7 +1,7 @@
 # Package
 
-version       = "0.3.0"
-author        = "mar"
+version       = "0.4.0"
+author        = "Gianmarco Marcello"
 description   = "An AVR project manager."
 license       = "BSD-3-Clause"
 bin           = @["avrman"]
