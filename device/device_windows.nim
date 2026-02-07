@@ -28,7 +28,7 @@ const
   DigrfDeviceInterface = 0x00000010'u32
   SpdrpHardwareId    = 1'u32
   HkeyLocalMachine   = HKey(0x80000002)
-  KeyRead            = 0x20019'i32
+  KeyRead            = 0x20019'u32
   RegSz              = 1'u32
   ErrorSuccess       = 0'i32
   ErrorNoMoreItems   = 259'i32
