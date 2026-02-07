@@ -11,6 +11,3 @@ bin           = @["avrman"]
 
 requires "nim >= 2.0.0"
 
-task clean, "deletes the previously built binary":
-  if fileExists bin[0]:
-    rmFile bin[0]
