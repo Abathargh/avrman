@@ -33,11 +33,12 @@ Options:
   -f, --fcpu        specifies the selected frequency
   -m, --mcu         specifies the microcontroller part number
   -d, --device      specifies the device used to program the microcontroller
+  -l, --license     specifies the license for the nimble project, ignored in
+                    combination with --cproject
   -p, --programmer  specifies the programmer to use
   -P, --port        specifies the port to use to program the device
   -s, --supported   prints a list of supported microcontroller part numbers
   -h, --help        shows this help message
-  --nosrc           specifies to nimble not to use the default src directory
   --cproject        initializes a C project instead of a nim one
   --cmake           uses CMake instead of plain make; checked only if using 
                     --cproject 
@@ -94,14 +95,14 @@ proc init(cmd_str: string): bool =
     port    = ""
     proj    = ""
     program = ""
-    nosrc   = false
+    license = ""
     cproj   = false
     cmake   = false
 
     pi = initOptParser(
       cmd_str,
       shortNoVal = {'s', 'h'},
-      longNoVal = @["supported", "help", "nosrc", "cproject", "cmake"]
+      longNoVal = @["supported", "help", "cproject", "cmake"]
     )
 
   for kind, opt, val in getopt(pi):
@@ -113,9 +114,9 @@ proc init(cmd_str: string): bool =
         of "mcu":        mcu     = val.toLower
         of "fcpu":       fcpu    = val
         of "device":     devname = val
+        of "license":    license = val
         of "programmer": program = val
         of "port":       port    = val
-        of "nosrc":      nosrc   = true
         of "cproject":   cproj   = true
         of "cmake":      cmake   = true
         of "supported": supported(); return true
@@ -128,6 +129,7 @@ proc init(cmd_str: string): bool =
         of "m": mcu     = val.toLower
         of "f": fcpu    = val
         of "d": devname = val
+        of "l": license = val
         of "p": program = val
         of "P": port    = val
         of "s": supported(); return true
@@ -179,10 +181,21 @@ proc init(cmd_str: string): bool =
         printError "you must pass a valid fcpu (positive integer)"
         return false
 
+    if license == "":
+      stdout.writeLine "using default license: 'Proprietary'"
+      license = "Proprietary"
+      
+    var en_license: License
+    try:
+      en_license = parseEnum[License](license)
+    except ValueError:
+      printError "invalid license, using default: 'Proprietary'"
+      en_license = Proprietary
+
     if cproj:
       generate_c_project(dev, port, proj, cmake)
     else:
-      generate_nim_project(dev, port, proj, nosrc)
+      generate_nim_project(dev, port, proj, en_license)
   except CatchableError:
     let err = getCurrentException()
     let msg = getCurrentExceptionMsg()
