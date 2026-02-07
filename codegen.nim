@@ -70,9 +70,11 @@ proc generate_nim_project*(dev: Device, port, proj: string, license: License) =
     let freq    = $dev.freq
     let author  = getEnv("USER", getEnv("USERNAME"))
     
-    let (vers, code) = execCmdEx("nim --version")
+    let (vers_long, code) = execCmdEx("nim --version")
     if code != 0:
       raise new_exception(ConfigException, "the nim compiler is not installed")
+
+    let vers = vers_long.splitLines()[0].splitWhitespace()[3]
 
     writeFile("panicoverride.nim", panic_tpl)
     writeFile(".gitignore", git_nim_tpl)

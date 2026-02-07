@@ -1,6 +1,7 @@
 switch("os", "standalone")
 switch("cpu", "avr")
 switch("mm", "none")
+switch("nimcache", ".nimcache")
 switch("define", "release")
 switch("define", "$#")
 switch("passC", "-DF_CPU=$#")
