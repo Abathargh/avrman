@@ -13,6 +13,8 @@ when defined(linux):
   include device_linux
 elif defined(macosx):
   include device_macosx
+elif defined(windows):
+  include device_windows
 else:
   type UnsupportedException = object of Exception
   iterator enumerate_serial_devices(): seq[string] =
