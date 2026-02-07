@@ -1,0 +1,3 @@
+[submodule "avr_io"]
+	path = avr_io
+	url = https://github.com/Abathargh/avr_io
