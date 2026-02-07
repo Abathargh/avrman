@@ -22,8 +22,8 @@ const entry = "$#"
 
 task build, "Builds the project artefacts":
   exec fmt"nim c -o:{entry}.elf  {entry}"
-  exec fmt"avr-objcopy -O ihex   {entry}.elf.hex"
-  exec fmt"avr-objcopy -O binary {entry}.elf.bin"
+  exec fmt"avr-objcopy -O ihex   {entry}.elf {entry}.hex"
+  exec fmt"avr-objcopy -O binary {entry}.elf {entry}.bin"
 
 
 task clean, "Deletes the previously built compiler artifacts":
