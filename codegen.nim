@@ -1,4 +1,4 @@
-import std/[strformat, strutils, tables, syncio, os, osproc, tables]
+import std/[os, osproc, strformat, strutils, syncio, tables]
 import device/device
 
 
