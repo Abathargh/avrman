@@ -1,4 +1,6 @@
 /.nimcache
+/deps
+nim.cfg
 *.elf
 *.hex
 *.bin

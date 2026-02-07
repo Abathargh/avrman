@@ -1,19 +1,17 @@
-import std/[strformat, strutils, tables, syncio, os]
+import std/[strformat, strutils, tables, syncio, os, osproc, tables]
 import device/device
 
 
 const
-  mcu_map* = {
-    "atmega16u4": "USING_ATMEGA16U4",
-    "atmega32u4": "USING_ATMEGA32U4",
-    "atmega328p": "USING_ATMEGA328P",
-    "atmega640":  "USING_ATMEGA640",
-    "atmega644":  "USING_ATMEGA644",
-    "atmega1280": "USING_ATMEGA1280",
-    "atmega1281": "USING_ATMEGA1281",
-    "atmega2560": "USING_ATMEGA2560",
-    "atmega2561": "USING_ATMEGA2561",
-  }.toTable
+  mcu_map* = (proc(): Table[string, string] =
+    for kind, path in walkDir("./avr_io/src/avr_io/private"):
+      if kind != pcFile: continue
+      var (_, name, _) = splitFile(path)
+      if name.starts_with("at"):
+        if name.starts_with("atmegas"):
+          name.delete(6..6)
+      result[name] = fmt"USING_{name.toUpperAscii()}"
+  )()
 
   config_tpl  = staticRead("./templates/nim/config.nims")
   base_tpl    = staticRead("./templates/nim/base.nim")
@@ -21,9 +19,6 @@ const
   nimble_tpl  = staticRead("./templates/nim/tpl.nimble")
   flash_tpl   = staticRead("./templates/nim/tpl_flash.nimble")
   git_nim_tpl = staticRead("./templates/nim/gitignore")
-
-  start_tpl  = "### AVRMAN CONFIGURATION START ###"
-  end_tpl    = "### AVRMAN CONFIGURATION END   ###"
 
 
 type ConfigException* = object of ValueError
@@ -38,58 +33,59 @@ proc supported*() =
   stdout.writeLine("")
 
 
-proc delete_src_dir(proj, nimble_file: string) =
-  let data = readFile(nimble_file)
-  var f = open(nimble_file, FileMode.fmWrite)
-  defer: f.close()
-
-  for line in data.splitLines():
-    if "srcDir" in line:
-      continue
-    f.writeLine(line)
-
-  for (kind, path) in walkDir(fmt"./{proj}/src"):
-    case kind
-    of pcFile:
-      let new_path = path.split("/")[^1]
-      moveFile(path, fmt"./{proj}/{new_path}")
-    else: continue
-
-  removeDir("./src")
+type
+  License* = enum
+    MIT         = "MIT"
+    GPL2        = "GPL2.0"
+    Apache2     = "Apache-2.0"
+    ISC         = "ISC"
+    GPL3        = "GPL-3.0"
+    BSD3        = "BSD-3-Clause"
+    LGPL2_1     = "LGPL-2.1"
+    LGPL3       = "LGPL-3.0"
+    LGPL_ex     = "LGPL-3.0-linking-exception"
+    EPL2        = "EPL-2.0"
+    AGPL3       = "AGPL-3.0"
+    Proprietary = "Proprietary"
+    Other       = "Other"
 
 
-proc generate_nim_project*(dev: Device, port, proj: string, nosrc: bool) =
+template withNewDir(d: string, code: untyped): untyped =
   if dirExists(proj):
     raise new_exception(ConfigException, fmt"./{proj} already exists")
-
-  if os.execShellCmd("nimble init $#" % proj) != 0:
-    raise new_exception(ConfigException, "error initializing the project")
-
-  setCurrentDir(proj)
-    
-  let mcu_def = mcu_map[dev.mcu]
-  let freq    = $dev.freq
-  let mcu     = dev.mcu
-  writeFile("config.nims", config_tpl % [mcu_def, mcu, freq, mcu, freq])
-  writeFile(".gitignore", git_nim_tpl)
-
-  let filename = "$#.nimble" % proj
-  if nosrc:
-    delete_src_dir(proj, filename)
-
-  var f = open(filename, fmAppend)
-  defer:  f.close()
-
-  f.write(nimble_tpl)
-  if dev.name != "" or port != "":
-    let progstr = dev.generate_progstr(port)
-    let discovery = if port != "": "" else: dev.generate_discovery()
-    f.write(flash_tpl % [discovery, progstr, discovery, progstr])
   
-  if not nosrc:
-    setCurrentDir("./src")
-  writeFile("panicoverride.nim", panic_tpl)
-  writeFile("$#.nim" % proj, base_tpl)
+  createDir(proj)
+  let original = getCurrentDir()
+
+  try:
+    setCurrentDir(d)
+    code
+  finally:
+    setCurrentDir(original)
+
+
+proc generate_nim_project*(dev: Device, port, proj: string, license: License) =
+  withNewDir(proj):
+    let mcu_def = mcu_map[dev.mcu]
+    let freq    = $dev.freq
+    let author  = getEnv("USER", getEnv("USERNAME"))
+    
+    let (vers, code) = execCmdEx("nim --version")
+    if code != 0:
+      raise new_exception(ConfigException, "the nim compiler is not installed")
+
+    writeFile("panicoverride.nim", panic_tpl)
+    writeFile(".gitignore", git_nim_tpl)
+    writefile(fmt"{proj}.nimble", nimble_tpl % [author, $license, proj, vers])
+    writeFile(fmt"{proj}.nim", base_tpl)
+
+    var config_cont = config_tpl % [mcu_def, freq, freq, proj]
+    if dev.name != "" or port != "":
+      let progstr = dev.generate_progstr(port)
+      let discovery = if port != "": "" else: dev.generate_discovery()
+      config_cont &= flash_tpl % [discovery, progstr, discovery, progstr]
+   
+    writeFile("config.nims", config_cont)
 
 
 const
@@ -102,32 +98,27 @@ const
 
 
 proc generate_c_project*(dev: Device, port, proj: string, cmake: bool) =
-  if dirExists(proj):
-    stdout.writeLine "a directory with the current project name already exists"
-    quit(1)
-
-  createDir(proj)
-  setCurrentDir(proj)
-
-  if cmake:
-    if dev.name != "" or port != "":
-      if port == "":
-        stdout.writeLine "warning: port discovery is not supported with CMake"
-      let progstr = dev.generate_progstr(port, FlashTarget.Make)
-      writeFile("CMakeLists.txt", cmakef_tpl % [dev.mcu, $dev.freq, progstr])
+  withNewDir(proj):
+    if cmake:
+      if dev.name != "" or port != "":
+        if port == "":
+          stdout.writeLine "warning: port discovery is not supported with CMake"
+        let progstr = dev.generate_progstr(port, FlashTarget.Make)
+        writeFile("CMakeLists.txt", cmakef_tpl % [dev.mcu, $dev.freq, progstr])
+      else:
+        writeFile("CMakeLists.txt", cmake_tpl  % [dev.mcu, $dev.freq])
     else:
-      writeFile("CMakeLists.txt", cmake_tpl  % [dev.mcu, $dev.freq])
-  else:
-    if dev.name != "" or port != "":
-      let disc    = dev.generate_discovery(FlashTarget.Make)
-      let progstr = dev.generate_progstr(port, FlashTarget.Make)
-      writeFile("Makefile", makef_tpl % [dev.mcu, $dev.freq, disc, progstr])
-    else:
-      writeFile("Makefile", make_tpl  % [dev.mcu, $dev.freq])
+      if dev.name != "" or port != "":
+        let disc    = dev.generate_discovery(FlashTarget.Make)
+        let progstr = dev.generate_progstr(port, FlashTarget.Make)
+        writeFile("Makefile", makef_tpl % [dev.mcu, $dev.freq, disc, progstr])
+      else:
+        writeFile("Makefile", make_tpl  % [dev.mcu, $dev.freq])
 
-  writeFile(".gitignore", git_c_tpl)
+    writeFile(".gitignore", git_c_tpl)
 
-  createDir("inc")
-  createDir("src")
-  setCurrentDir("./src")
-  writeFile("main.c", main_tpl)
+    createDir("inc")
+    createDir("src")
+    setCurrentDir("./src")
+    writeFile("main.c", main_tpl)
+

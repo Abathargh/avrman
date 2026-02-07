@@ -1,5 +1,8 @@
+
 task flash, "Loads the compiled binary onto the MCU":
-$#exec("avrdude $# -U flash:w:" & bin[0] & ".hex:i")
+$#exec(fmt"avrdude $# -U flash:w:{entry}.hex:i")
+
 
 task flash_debug, "Loads the elf binary onto the MCU":
-$#exec("avrdude $# -U flash:w:" & bin[0] & ".elf:e")
+$#exec(fmt"avrdude $# -U flash:w:{entry}.elf:e")
+

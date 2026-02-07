@@ -1,16 +1,14 @@
-requires "avr_io >= 0.5.0"
+# Package
 
-after build:
-  when defined(windows):
-    mvFile(bin[0] & ".exe", bin[0] & ".elf")
-  else:
-    mvFile(bin[0], bin[0] & ".elf")
-  exec("avr-objcopy -O ihex " & bin[0] & ".elf " & bin[0] & ".hex")
-  exec("avr-objcopy -O binary " & bin[0] & ".elf " & bin[0] & ".bin")
+version       = "0.1.0"
+author        = "$#"
+description   = "A new awesome nimble package"
+license       = "$#"
+bin           = @["$#"]
 
-task clear, "Deletes the previously built compiler artifacts":
-  rmFile(bin[0] & ".elf")
-  rmFile(bin[0] & ".hex")
-  rmFile(bin[0] & ".bin")
-  rmDir(".nimcache")
+
+# Dependencies
+
+requires "nim >= $#"
+requires "avr_io"
 
