@@ -4,7 +4,7 @@
 ## everything regarding the loading and discovery process, so that's what this
 ## is about, a generic mechanism for device and pid/vid retrieval.
 
-import std/[dirs, json, os, osproc, sequtils, strformat, strutils, sets]
+import std/[json, os, osproc, sequtils, strformat, strutils, sets]
 import std/[sugar, tables]
 
 ## a target must define ‘enumerate_serial_devices‘ and ‘get_vid_pid‘
