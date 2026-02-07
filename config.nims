@@ -1,3 +1,4 @@
+switch("nimcache", ".nimcache")
 switch("define", "release")
 switch("threads", "off")
 switch("opt", "size")
@@ -12,6 +13,7 @@ task clean, "deletes the previously built binary":
   const bin = "avrman"
   if fileExists bin:
     rmFile bin
+  rmDir(".nimcache")
 
 
 # begin Nimble config (version 2)
