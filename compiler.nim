@@ -70,7 +70,7 @@ const
 
 when hostOS == "windows":
   const
-    flags = avrman_flags + """--gcc.options.always:"-w -fmax-errors=3")"""
+    flags = avrman_flags & """--gcc.options.always:"-w -fmax-errors=3")"""
 else:
   const
     flags = avrman_flags
