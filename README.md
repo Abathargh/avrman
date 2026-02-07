@@ -38,7 +38,9 @@ should be separately installed.
 ```bash 
 git clone https://github.com/Abathargh/avrman
 cd avrman
-nimble build
+
+git submodule update --init --recursive
+nim c avrman
 ```
 
 Or simply install using:
