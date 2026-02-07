@@ -65,17 +65,17 @@ proc generate_progstr*(dev: Device, port: string = "",
   ## The user can pass a port, to disable port discovery and hard-code what
   ## port is desired, and can specify a target for code generation.
 
-  result = fmt"-c {dev.protocol} -p {dev.mcu}"
+  result = &"-c {dev.protocol} -p {dev.mcu}"
 
-  if dev.speed != 0: result.add fmt" -b {dev.speed}"
-  if dev.flush:      result.add fmt" -D"
+  if dev.speed != 0: result.add &" -b {dev.speed}"
+  if dev.flush:      result.add &" -D"
 
   if port == "":
     case target
-    of Nimble: result.add fmt""" -P " & {nim_port} & """"
-    of Make:   result.add fmt" -P $({c_port}) "
+    of Nimble: result.add &" -P \" & {nim_port} &\n          \""
+    of Make:   result.add &" -P $({c_port}) "
   else:
-    result.add fmt" -P {port}"
+    result.add &" -P {port}"
 
 
 proc find_port*(dev: Device): string =

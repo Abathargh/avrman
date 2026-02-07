@@ -34,7 +34,8 @@ proc supported*() =
 
 
 type
-  License* = enum
+  License* = enum ## \
+    ## Available licenses from nimble interactive mode.
     MIT         = "MIT"
     GPL2        = "GPL2.0"
     Apache2     = "Apache-2.0"
