@@ -1,15 +1,12 @@
 # Windows serial device discovery using SetupAPI and Registry
 # Provides the same public API as device_linux.nim and device_macosx.nim
 
-import std/[strutils, strformat]
-
 type
   Handle   = int
   DWord    = uint32
   Bool     = int32
   HKey     = Handle
   Long     = int32
-  ULong    = uint32
   Guid     = object
     data1: uint32
     data2: uint16
@@ -25,13 +22,9 @@ type
 const
   InvalidHandle      = Handle(-1)
   DigrfPresent       = 0x00000002'u32
-  DigrfDeviceInterface = 0x00000010'u32
   SpdrpHardwareId    = 1'u32
-  HkeyLocalMachine   = HKey(0x80000002)
   KeyRead            = 0x20019'u32
-  RegSz              = 1'u32
   ErrorSuccess       = 0'i32
-  ErrorNoMoreItems   = 259'i32
 
   # GUID for serial ports: {4D36E978-E325-11CE-BFC1-08002BE10318}
   GuidSerialPort = Guid(
