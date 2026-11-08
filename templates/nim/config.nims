@@ -28,8 +28,8 @@ task build, "Builds the project artefacts":
 
 
 task clean, "Deletes the previously built compiler artifacts":
-  rmFile "{entry}.elf"
-  rmFile "{entry}.hex"
-  rmFile "{entry}.bin"
+  rmFile fmt"{entry}.elf"
+  rmFile fmt"{entry}.hex"
+  rmFile fmt"{entry}.bin"
   rmDir  ".nimcache"
 

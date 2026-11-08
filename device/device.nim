@@ -72,7 +72,7 @@ proc generate_progstr*(dev: Device, port: string = "",
 
   if port == "":
     case target
-    of Nimble: result.add &" -P \" & {nim_port} &\n          \""
+    of Nimble: result.add &" -P \" & {nim_port} &\n       fmt\""
     of Make:   result.add &" -P $({c_port}) "
   else:
     result.add &" -P {port}"
